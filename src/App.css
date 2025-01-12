@@ -1,0 +1,11 @@
+/* d:/kalash/ABC Track/Dashtail-v1.3.0/abctrack/src/App.css */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.App {
+  display: flex;
+  height: 100vh;
+}

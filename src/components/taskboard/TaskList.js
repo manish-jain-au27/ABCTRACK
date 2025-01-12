@@ -1,4 +1,3 @@
-// d:/kalash/ABC Track/Dashtail-v1.3.0/abctrack/src/components/taskboard/TaskList.js
 import React, { useState } from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 
@@ -30,7 +29,7 @@ const TaskList = ({
     }
   };
 
-  // Calculate totals
+ 
   const totalHours = tasks.reduce((sum, task) => sum + (task.hours || 0), 0);
   const totalCost = tasks.reduce((sum, task) => sum + (task.totalCost || 0), 0);
 
@@ -115,7 +114,6 @@ const TaskList = ({
         </tfoot>
       </table>
 
-      {/* Edit Task Modal */}
       {editingTask && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[500px]">

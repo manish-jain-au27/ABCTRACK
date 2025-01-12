@@ -1,4 +1,3 @@
-// d:/kalash/ABC Track/Dashtail-v1.3.0/abctrack/src/components/taskboard/Board.js
 import React, { useState } from 'react';
 import { MoreHorizontal, Plus, UserPlus } from 'lucide-react';
 
@@ -14,7 +13,6 @@ const Board = ({
   const { name, status, id } = board;
 
   const handleDelete = () => {
-    // Implement delete logic
     console.log(`Deleting board ${id}`);
   };
 
@@ -28,7 +26,6 @@ const Board = ({
           status === 'success' ? 'border-green-500' : 'border-gray-500'}
       `}
     >
-      {/* Board Header */}
       <div className="flex items-center justify-between border-b border-gray-200 p-3">
         <button className="p-1 bg-transparent border border-gray-200 rounded">
           <UserPlus className="w-4 h-4" />
@@ -60,12 +57,10 @@ const Board = ({
         </div>
       </div>
 
-      {/* Board Content */}
       <div className="p-3 max-h-[calc(100vh-300px)] overflow-y-auto">
         {children}
       </div>
 
-      {/* Add Task Button */}
       {showButton && (
         <div className="p-3 border-t">
           <button 

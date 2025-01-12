@@ -1,4 +1,3 @@
-// d:/kalash/ABC Track/Dashtail-v1.3.0/abctrack/src/components/taskboard/TaskDetailModal.js
 import React, { useState, useEffect } from 'react';
 import { X, Eye, Clock, Calendar, User, Tag, List, DollarSign } from 'lucide-react';
 
@@ -9,7 +8,6 @@ const TaskDetailModal = ({
 }) => {
   const [localTask, setLocalTask] = useState(task);
 
-  // Helper function to format date
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -19,7 +17,6 @@ const TaskDetailModal = ({
     });
   };
 
-  // Determine status color and label
   const getStatusStyle = (status) => {
     switch(status) {
       case 'todo': return { 
@@ -41,7 +38,6 @@ const TaskDetailModal = ({
     }
   };
 
-  // Determine priority color and label
   const getPriorityStyle = (priority) => {
     switch(priority) {
       case 'high': return { 
@@ -69,7 +65,6 @@ const TaskDetailModal = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative">
-        {/* Header */}
         <div className="bg-gray-50 p-6 border-b flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">{localTask.title}</h2>
@@ -95,9 +90,7 @@ const TaskDetailModal = ({
           </div>
         </div>
 
-        {/* Task Details Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
-          {/* Left Column */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <Tag className="text-gray-500" size={20} />
@@ -131,7 +124,6 @@ const TaskDetailModal = ({
             </div>
           </div>
 
-          {/* Right Column */}
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <Clock className="text-gray-500" size={20} />
@@ -161,7 +153,6 @@ const TaskDetailModal = ({
           </div>
         </div>
 
-        {/* Status and Priority */}
         <div className="bg-gray-50 p-6 border-t flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <div>

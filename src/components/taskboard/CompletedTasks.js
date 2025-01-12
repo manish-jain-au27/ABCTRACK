@@ -1,9 +1,7 @@
-// src/components/taskboard/CompletedTasks.js
 import React, { useState, useMemo, useCallback } from 'react';
 import { Edit, FileText, Search } from 'lucide-react';
 import CreateInvoiceModal from '../invoicing/CreateInvoiceModal';
 
-// Dummy entities data
 const ENTITIES = [
   {
     id: 'ent1',
@@ -28,7 +26,6 @@ const ENTITIES = [
   }
 ];
 
-// Directly import the JSON data
 const completedTasksData = [
   {
     "id": "ct1",
@@ -185,7 +182,6 @@ const CompletedTasks = ({ onEditTask, onCreateInvoice }) => {
     }
   ]);
 
-  // Memoized sorting and filtering logic
   const sortedTasks = useMemo(() => {
     return [...tasks]
       .filter(task => 
@@ -203,7 +199,6 @@ const CompletedTasks = ({ onEditTask, onCreateInvoice }) => {
       });
   }, [tasks, searchTerm, sortConfig]);
 
-  // Memoized sort handler to prevent unnecessary re-renders
   const handleSort = useCallback((key) => {
     setSortConfig(prevConfig => ({
       key,
@@ -213,26 +208,21 @@ const CompletedTasks = ({ onEditTask, onCreateInvoice }) => {
     }));
   }, []);
 
-  // Memoized search handler
   const handleSearchChange = useCallback((e) => {
     setSearchTerm(e.target.value);
   }, []);
 
-  // Handle creating invoice
   const handleCreateInvoice = useCallback((task) => {
     setSelectedTask(task);
     setIsInvoiceModalOpen(true);
   }, []);
 
-  // Handle closing invoice modal
   const handleCloseInvoiceModal = useCallback(() => {
     setIsInvoiceModalOpen(false);
     setSelectedTask(null);
   }, []);
 
-  // Handle invoice submission
   const handleInvoiceSubmit = useCallback((invoiceData) => {
-    // Implement invoice submission logic here
     console.log('Invoice submitted:', invoiceData);
     onCreateInvoice(invoiceData);
     handleCloseInvoiceModal();
@@ -320,7 +310,6 @@ const CompletedTasks = ({ onEditTask, onCreateInvoice }) => {
         )}
       </div>
 
-      {/* Invoice Modal */}
       {isInvoiceModalOpen && selectedTask && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative p-8">

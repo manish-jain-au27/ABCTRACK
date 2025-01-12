@@ -1,8 +1,6 @@
-// d:/kalash/ABC Track/Dashtail-v1.3.0/abctrack/src/components/taskboard/AddTask.js
 import React, { useState } from 'react';
 import { ChevronDown, X } from 'lucide-react';
 
-// Sample dropdown data with pricing
 const TASK_CATEGORIES = [
   { 
     id: 'audit', 
@@ -46,7 +44,6 @@ const PRIORITY_LEVELS = [
   { id: 'critical', name: 'Critical', color: 'text-red-700' }
 ];
 
-// Mock employee data
 const EMPLOYEES = [
   { 
     id: 1, 
@@ -134,12 +131,10 @@ const AddTask = ({
     const subcategory = category.subcategories.find(sub => sub.id === subcategoryId);
 
     setTaskData(prev => {
-      // Toggle subcategory selection
       const currentSubcategories = prev.subcategories.includes(subcategoryId)
         ? prev.subcategories.filter(id => id !== subcategoryId)
         : [...prev.subcategories, subcategoryId];
 
-      // Update subcategory details
       const currentSubcategoryDetails = currentSubcategories.map(subId => {
         const subcat = category.subcategories.find(s => s.id === subId);
         return {
@@ -164,7 +159,6 @@ const AddTask = ({
         detail.id === subcategoryId ? { ...detail, hours: Number(hours) } : detail
       );
 
-      // Recalculate total hours and cost
       const totalHours = updatedSubcategoryDetails.reduce((sum, detail) => sum + detail.hours, 0);
       const totalCost = updatedSubcategoryDetails.reduce((sum, detail) => 
         sum + (detail.hours * detail.pricePerHour), 0
@@ -180,7 +174,6 @@ const AddTask = ({
   };
 
   const openEmployeeModal = () => {
-    // Filter employees based on selected category's subcategories
     const categorySubspecialties = taskData.subcategories;
     const filtered = EMPLOYEES.filter(emp => 
       categorySubspecialties.some(specialty => 
@@ -203,7 +196,6 @@ const AddTask = ({
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Validation
     if (!taskData.title.trim()) {
       alert('Please enter a task title');
       return;
@@ -214,7 +206,6 @@ const AddTask = ({
       return;
     }
 
-    // Generate a unique task ID if not provided
     const finalTaskData = {
       ...taskData,
       taskId: taskData.taskId || `TASK-${Math.floor(Math.random() * 10000)}`
@@ -241,7 +232,7 @@ const AddTask = ({
             />
           </div>
 
-          {/* Category */}
+      
           <div>
             <label className="block text-sm font-medium text-gray-700">Category</label>
             <select
@@ -257,7 +248,7 @@ const AddTask = ({
             </select>
           </div>
 
-          {/* Subcategories */}
+         
           {taskData.category && (
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700">Subcategories</label>
@@ -297,7 +288,6 @@ const AddTask = ({
             </div>
           )}
 
-          {/* Priority */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Priority</label>
             <div className="mt-1 flex space-x-4">
@@ -317,7 +307,6 @@ const AddTask = ({
             </div>
           </div>
 
-          {/* Title */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Title</label>
             <input
@@ -330,7 +319,6 @@ const AddTask = ({
             />
           </div>
 
-          {/* Subtitle */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Subtitle</label>
             <input
@@ -343,7 +331,6 @@ const AddTask = ({
             />
           </div>
 
-          {/* Start Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Start Date</label>
             <input
@@ -355,7 +342,6 @@ const AddTask = ({
             />
           </div>
 
-          {/* End Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700">End Date</label>
             <input
@@ -367,7 +353,6 @@ const AddTask = ({
             />
           </div>
 
-          {/* Client */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Client</label>
             <select
@@ -383,7 +368,6 @@ const AddTask = ({
             </select>
           </div>
 
-          {/* Employee Assignment */}
           <div className="col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">Assigned To</label>
             {taskData.assignedTo ? (
@@ -419,7 +403,6 @@ const AddTask = ({
             )}
           </div>
 
-          {/* Total Hours and Cost */}
           <div>
             <label className="block text-sm font-medium text-gray-700">Total Hours</label>
             <input
@@ -440,7 +423,6 @@ const AddTask = ({
           </div>
         </div>
 
-        {/* Actions */}
         <div className="mt-6 flex justify-end space-x-3">
           <button
             type="button"
@@ -458,7 +440,6 @@ const AddTask = ({
         </div>
       </form>
 
-      {/* Employee Selection Modal */}
       {isEmployeeModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-[600px] max-h-[80vh] overflow-y-auto">

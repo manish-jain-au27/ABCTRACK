@@ -1,4 +1,4 @@
-// src/components/sidebar/Sidebar.js
+
 import React, { useState, lazy, Suspense } from 'react';
 import { 
   Home, 
@@ -10,7 +10,7 @@ import {
   ChevronRight 
 } from 'lucide-react';
 
-// Use lazy loading for CompletedTasks
+
 const CompletedTasks = lazy(() => import('../taskboard/CompletedTasks'));
 const TaskBoard = lazy(() => import('../taskboard/TaskBoard'));
 
@@ -63,7 +63,6 @@ const Sidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
 
-  // Render the appropriate view based on activeItem
   const renderView = () => {
     switch(activeItem) {
       case 'taskboard':
@@ -78,11 +77,9 @@ const Sidebar = () => {
             <CompletedTasks 
               onEditTask={(task) => {
                 console.log('Edit task:', task);
-                // Implement edit task logic
               }}
               onCreateInvoice={(task) => {
                 console.log('Create invoice for task:', task);
-                // Implement create invoice logic
               }}
             />
           </Suspense>
@@ -104,7 +101,7 @@ const Sidebar = () => {
 
   return (
     <div className="flex w-full h-full">
-      {/* Sidebar */}
+    
       <div 
         className={`
           bg-white border-r h-full 
@@ -112,7 +109,7 @@ const Sidebar = () => {
           ${isCollapsed ? 'w-20' : 'w-64'}
         `}
       >
-        {/* Sidebar Header */}
+     
         <div className="flex items-center justify-between p-4 border-b">
           {!isCollapsed && (
             <div className="text-xl font-bold text-blue-600">
@@ -127,7 +124,7 @@ const Sidebar = () => {
           </button>
         </div>
 
-        {/* Sidebar Items */}
+      
         <div className="flex-grow">
           {sidebarItems.map(item => (
             <SidebarItem
@@ -140,15 +137,15 @@ const Sidebar = () => {
           ))}
         </div>
 
-        {/* Sidebar Footer */}
+    
         {!isCollapsed && (
           <div className="p-4 border-t text-center text-xs text-gray-500">
-            © 2024 MyApp
+            ABC Track
           </div>
         )}
       </div>
 
-      {/* Main Content Area - FULL WIDTH */}
+      
       <div className="flex-grow overflow-auto">
         {renderView()}
       </div>

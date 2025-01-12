@@ -1,4 +1,3 @@
-// d:/kalash/ABC Track/Dashtail-v1.3.0/abctrack/src/components/taskboard/Task.js
 import React, { useState } from 'react';
 import { MoreHorizontal, ChevronDown, Eye } from 'lucide-react';
 
@@ -34,14 +33,12 @@ const Task = ({
 
   return (
     <div className="border rounded p-3 mb-2 relative group">
-      {/* Task Header */}
       <div className="flex justify-between items-start mb-2">
         <div className="flex items-center gap-2">
           <span className="text-xs border rounded px-2 py-1">
             {title.split(' ')[0]}
           </span>
           
-          {/* Board Dropdown */}
           <div className="relative">
             <button 
               onClick={() => setIsBoardDropdownOpen(!isBoardDropdownOpen)}
@@ -67,9 +64,7 @@ const Task = ({
           </div>
         </div>
 
-        {/* Task Options */}
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100">
-          {/* View Task Details */}
           <button 
             onClick={() => onTaskClick(task)}
             className="p-1 hover:bg-gray-100 rounded"
@@ -78,7 +73,6 @@ const Task = ({
             <Eye className="w-5 h-5 text-blue-600" />
           </button>
 
-          {/* More Options */}
           <button 
             onClick={() => setIsOptionsOpen(!isOptionsOpen)}
             className="p-1 hover:bg-gray-100 rounded"
@@ -105,13 +99,11 @@ const Task = ({
         </div>
       </div>
 
-      {/* Task Content */}
       <div>
         <h3 className="font-semibold mb-1">{title}</h3>
         <p className="text-gray-600 text-sm">{subtitle}</p>
       </div>
 
-      {/* Task Footer */}
       <div className="mt-2 flex justify-between items-center">
         <span 
           className={`text-xs px-2 py-1 rounded ${

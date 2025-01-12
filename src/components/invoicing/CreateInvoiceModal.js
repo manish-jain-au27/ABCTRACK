@@ -1,8 +1,8 @@
-// src/components/invoicing/CreateInvoiceModal.js
+
 import React, { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 
-// Dummy entities data
+
 const ENTITIES = [
   {
     id: 'ent1',
@@ -51,13 +51,11 @@ const CreateInvoiceModal = ({ task, onClose, onCreateInvoice }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Validate entity selection
     if (!invoiceDetails.selectedEntity) {
       alert('Please select an invoicing entity');
       return;
     }
 
-    // Prepare complete invoice data
     const finalInvoiceData = {
       ...invoiceDetails,
       entityName: invoiceDetails.selectedEntity.name,
@@ -73,7 +71,7 @@ const CreateInvoiceModal = ({ task, onClose, onCreateInvoice }) => {
       <h2 className="text-2xl font-bold mb-6 text-gray-800">Create Invoice</h2>
       
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Entity Selection */}
+       
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Select Invoicing Entity
@@ -110,7 +108,7 @@ const CreateInvoiceModal = ({ task, onClose, onCreateInvoice }) => {
           </div>
         </div>
 
-        {/* Selected Entity Details */}
+    
         {invoiceDetails.selectedEntity && (
           <div className="bg-gray-50 p-4 rounded-md mb-4">
             <h3 className="font-semibold mb-2">Entity Details</h3>
@@ -123,7 +121,7 @@ const CreateInvoiceModal = ({ task, onClose, onCreateInvoice }) => {
           </div>
         )}
 
-        {/* Invoice Details */}
+     
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Invoice Number</label>
@@ -148,7 +146,7 @@ const CreateInvoiceModal = ({ task, onClose, onCreateInvoice }) => {
           </div>
         </div>
 
-        {/* Task and Client Details */}
+       
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Client Name</label>
@@ -170,7 +168,7 @@ const CreateInvoiceModal = ({ task, onClose, onCreateInvoice }) => {
           </div>
         </div>
 
-        {/* Financial Details */}
+    
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Total Hours</label>
@@ -192,7 +190,7 @@ const CreateInvoiceModal = ({ task, onClose, onCreateInvoice }) => {
           </div>
         </div>
 
-        {/* Notes */}
+      
         <div>
           <label className="block text-sm font-medium text-gray-700">Notes</label>
           <textarea
@@ -206,7 +204,6 @@ const CreateInvoiceModal = ({ task, onClose, onCreateInvoice }) => {
           />
         </div>
 
-        {/* Action Buttons */}
         <div className="flex justify-end space-x-2 mt-6">
           <button 
             type="button"

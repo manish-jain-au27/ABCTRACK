@@ -1,11 +1,10 @@
-// d:/kalash/ABC Track/Dashtail-v1.3.0/abctrack/src/components/taskboard/TaskHeader.js
 import React from 'react';
 import { Plus, List, Kanban, Search } from 'lucide-react';
 
 const TaskHeader = ({ 
   onCreateBoard, 
   onViewChange, 
-  view = 'kanban', // Add a default value
+  view = 'kanban',
   onSearch, 
   onAddTask,
   onStatusFilter,
@@ -30,7 +29,6 @@ const TaskHeader = ({
       </div>
 
       <div className="flex items-center space-x-4">
-        {/* View Switcher */}
         <div className="flex border rounded-md">
           <button 
             onClick={() => onViewChange('kanban')}
@@ -46,7 +44,6 @@ const TaskHeader = ({
           </button>
         </div>
 
-        {/* Status Filter */}
         <select
           value={statusFilter}
           onChange={(e) => onStatusFilter(e.target.value)}
@@ -58,7 +55,6 @@ const TaskHeader = ({
           <option value="done">Done</option>
         </select>
 
-        {/* Search */}
         <div className="relative">
           <input 
             type="text" 

@@ -1,4 +1,3 @@
-// d:/kalash/ABC Track/Dashtail-v1.3.0/abctrack/src/components/taskboard/TaskBoard.js
 import React, { useState, useMemo } from 'react';
 import TaskHeader from './TaskHeader';
 import Board from './Board';
@@ -80,7 +79,6 @@ const TaskBoard = () => {
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const [selectedBoardId, setSelectedBoardId] = useState(null);
   
-  // New state for task detail modal
   const [selectedTask, setSelectedTask] = useState(null);
   const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
 
@@ -103,8 +101,8 @@ const TaskBoard = () => {
       ...newTask,
       id: `t${Date.now()}`,
       taskId: newTask.taskId || `TASK-${(tasks.length + 1).toString().padStart(3, '0')}`,
-      status: 'todo', // Default status
-      boardId: selectedBoardId || '1' // Use selected board or default to first board
+      status: 'todo',
+      boardId: selectedBoardId || '1'
     };
     setTasks([...tasks, taskWithId]);
     setIsAddTaskOpen(false);
@@ -133,7 +131,6 @@ const TaskBoard = () => {
     ));
   };
 
-  // New method to handle task click
   const handleTaskClick = (task) => {
     setSelectedTask(task);
     setIsTaskDetailOpen(true);
@@ -144,7 +141,6 @@ const TaskBoard = () => {
     setSelectedTask(null);
   };
 
-  // Filtered and processed tasks
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
       const matchesSearch = 
@@ -211,7 +207,7 @@ const TaskBoard = () => {
         </div>
       )}
 
-      {/* Task Detail Modal */}
+     
       {isTaskDetailOpen && selectedTask && (
         <TaskDetailModal 
           task={selectedTask}
@@ -219,7 +215,7 @@ const TaskBoard = () => {
         />
       )}
 
-      {/* Add Task Modal */}
+     
       {isAddTaskOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="w-[800px] max-h-[90vh] overflow-y-auto">

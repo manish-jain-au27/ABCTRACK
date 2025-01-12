@@ -17,41 +17,60 @@ const TaskBoard = () => {
   const [tasks, setTasks] = useState([
     { 
       id: 't1', 
-      taskId: 'TASK-001',
-      category: 'dev',
-      subcategories: ['frontend'],
+      taskId: 'TASK-CA-001',
+      category: 'audit',
+      subcategories: ['financial'],
       subcategoryDetails: [
-        { id: 'frontend', name: 'Frontend', pricePerHour: 50, hours: 40 }
+        { id: 'financial', name: 'Financial Statement Review', pricePerHour: 250, hours: 40 }
       ],
-      title: 'Design Dashboard', 
-      subtitle: 'Create modern UI components',
-      startDate: '2024-01-15',
-      endDate: '2024-02-15',
-      client: 'client1',
+      title: 'Annual Financial Audit', 
+      subtitle: 'Comprehensive financial review for Chirag Corporations',
+      startDate: '2024-04-15',
+      endDate: '2024-05-15',
+      client: 'Chirag Corporations',
       hours: 40,
-      totalCost: 2000,
+      totalCost: 10000,
       priority: 'high', 
       boardId: '1',
       status: 'todo'
     },
     { 
       id: 't2', 
-      taskId: 'TASK-002',
-      category: 'dev',
-      subcategories: ['backend'],
+      taskId: 'TASK-CA-002',
+      category: 'tax',
+      subcategories: ['corporate'],
       subcategoryDetails: [
-        { id: 'backend', name: 'Backend', pricePerHour: 60, hours: 60 }
+        { id: 'corporate', name: 'Corporate Tax Planning', pricePerHour: 275, hours: 30 }
       ],
-      title: 'Implement Backend', 
-      subtitle: 'Set up API endpoints',
-      startDate: '2024-01-20',
-      endDate: '2024-02-20',
-      client: 'client2',
-      hours: 60,
-      totalCost: 3600,
+      title: 'Tax Compliance Strategy', 
+      subtitle: 'Develop tax optimization plan for Kalash Infotech',
+      startDate: '2024-04-20',
+      endDate: '2024-05-20',
+      client: 'Kalash Infotech',
+      hours: 30,
+      totalCost: 8250,
       priority: 'medium', 
       boardId: '2',
       status: 'inprogress'
+    },
+    { 
+      id: 't3', 
+      taskId: 'TASK-CA-003',
+      category: 'advisory',
+      subcategories: ['risk-management'],
+      subcategoryDetails: [
+        { id: 'risk-management', name: 'Risk Management Consulting', pricePerHour: 265, hours: 25 }
+      ],
+      title: 'Financial Risk Evaluation', 
+      subtitle: 'Comprehensive risk assessment for Riddhi Infotech',
+      startDate: '2024-05-01',
+      endDate: '2024-05-25',
+      client: 'Riddhi Infotech',
+      hours: 25,
+      totalCost: 6625,
+      priority: 'low', 
+      boardId: '3',
+      status: 'review'
     }
   ]);
 

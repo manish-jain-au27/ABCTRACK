@@ -5,38 +5,38 @@ import { ChevronDown, X } from 'lucide-react';
 // Sample dropdown data with pricing
 const TASK_CATEGORIES = [
   { 
-    id: 'dev', 
-    name: 'Development',
+    id: 'audit', 
+    name: 'Audit Services',
     subcategories: [
-      { id: 'frontend', name: 'Frontend', pricePerHour: 50 },
-      { id: 'backend', name: 'Backend', pricePerHour: 60 },
-      { id: 'fullstack', name: 'Full Stack', pricePerHour: 70 }
+      { id: 'financial', name: 'Financial Statement Audit', pricePerHour: 250 },
+      { id: 'compliance', name: 'Compliance Audit', pricePerHour: 225 },
+      { id: 'internal', name: 'Internal Audit Review', pricePerHour: 200 }
     ]
   },
   { 
-    id: 'design', 
-    name: 'Design',
+    id: 'tax', 
+    name: 'Tax Services',
     subcategories: [
-      { id: 'ui', name: 'UI Design', pricePerHour: 45 },
-      { id: 'ux', name: 'UX Design', pricePerHour: 55 },
-      { id: 'graphics', name: 'Graphic Design', pricePerHour: 40 }
+      { id: 'corporate', name: 'Corporate Tax Planning', pricePerHour: 275 },
+      { id: 'personal', name: 'Personal Tax Consulting', pricePerHour: 200 },
+      { id: 'international', name: 'International Tax Strategy', pricePerHour: 300 }
     ]
   },
   { 
-    id: 'marketing', 
-    name: 'Marketing',
+    id: 'advisory', 
+    name: 'Advisory Services',
     subcategories: [
-      { id: 'social', name: 'Social Media', pricePerHour: 35 },
-      { id: 'content', name: 'Content Marketing', pricePerHour: 40 },
-      { id: 'email', name: 'Email Marketing', pricePerHour: 45 }
+      { id: 'financial-planning', name: 'Financial Advisory', pricePerHour: 285 },
+      { id: 'risk-management', name: 'Risk Management Consulting', pricePerHour: 265 },
+      { id: 'forensic', name: 'Forensic Accounting', pricePerHour: 295 }
     ]
   }
 ];
 
 const CLIENTS = [
-  { id: 'client1', name: 'Acme Corp' },
-  { id: 'client2', name: 'Tech Solutions' },
-  { id: 'client3', name: 'Innovative Inc' }
+  { id: 'client1', name: 'Chirag corporation' },
+  { id: 'client2', name: 'Kalash infotech' },
+  { id: 'client3', name: ' Riddhi infotech' }
 ];
 
 const PRIORITY_LEVELS = [
@@ -50,38 +50,38 @@ const PRIORITY_LEVELS = [
 const EMPLOYEES = [
   { 
     id: 1, 
-    name: 'John Doe', 
-    department: 'Engineering', 
-    avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-    specialties: ['frontend', 'backend']
+    name: 'Manish', 
+    department: 'Audit & Assurance', 
+   
+    specialties: ['financial', 'compliance']
   },
   { 
     id: 2, 
-    name: 'Jane Smith', 
-    department: 'Design', 
-    avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
-    specialties: ['ui', 'ux']
+    name: 'Ruchita', 
+    department: 'Tax Advisory', 
+    
+    specialties: ['corporate', 'personal']
   },
   { 
     id: 3, 
-    name: 'Mike Johnson', 
-    department: 'Marketing', 
-    avatar: 'https://randomuser.me/api/portraits/men/3.jpg',
-    specialties: ['social', 'content']
+    name: 'Swati', 
+    department: 'Financial Advisory', 
+    
+    specialties: ['financial-planning', 'risk-management']
   },
   { 
     id: 4, 
-    name: 'Emily Brown', 
-    department: 'Engineering', 
-    avatar: 'https://randomuser.me/api/portraits/women/4.jpg',
-    specialties: ['fullstack']
+    name: 'Darshan', 
+    department: 'Forensic Accounting', 
+    
+    specialties: ['forensic', 'internal']
   },
   { 
     id: 5, 
-    name: 'David Wilson', 
-    department: 'Design', 
-    avatar: 'https://randomuser.me/api/portraits/men/5.jpg',
-    specialties: ['graphics']
+    name: 'Manoj', 
+    department: 'International Tax', 
+    
+    specialties: ['international', 'corporate']
   }
 ];
 

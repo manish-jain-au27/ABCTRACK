@@ -7,24 +7,24 @@ import CreateInvoiceModal from '../invoicing/CreateInvoiceModal';
 const ENTITIES = [
   {
     id: 'ent1',
-    name: 'Kalash Technologies Pvt Ltd',
-    address: '123 Tech Park, Bangalore, Karnataka 560001',
-    gstNumber: '07AATCA2480C1Z0',
-    contactEmail: 'billing@kalashtech.com'
+    name: 'Chirag Corporations',
+    address: 'gokul nagar, Bhiwandi 421302',
+    gstNumber: 'sdfasd897f9sd8g',
+    contactEmail: 'chirag@chiragcorporations.com'
   },
   {
     id: 'ent2',
-    name: 'ABC Innovations Inc.',
-    address: '456 Innovation Drive, Silicon Valley, CA 94000',
-    gstNumber: 'US-TAX-1234567',
-    contactEmail: 'finance@abcinnovations.com'
+    name: 'Kalash Infotech',
+    address: 'Anjurphata, Bhiwandi 421302',
+    gstNumber: 'sdfsd97f6sd87f',
+    contactEmail: 'darshan@kalashinfotech.com'
   },
   {
     id: 'ent3',
-    name: 'Global Solutions LLC',
-    address: '789 Business Center, New York, NY 10001',
-    gstNumber: 'US-TAX-7654321',
-    contactEmail: 'accounts@globalsolutions.com'
+    name: 'Riddhi infotech',
+    address: 'gokul nagar, Bhiwandi 421302',
+    gstNumber: 'sdf76dsf7sd',
+    contactEmail: 'mansih@riddhi-infotech.com'
   }
 ];
 
@@ -32,33 +32,88 @@ const ENTITIES = [
 const completedTasksData = [
   {
     "id": "ct1",
-    "title": "Website Redesign Project",
-    "subtitle": "Redesign corporate website",
-    "client": "Acme Corporation",
+    "title": "Financial Statement Audit",
+    "subtitle": "Annual Audit for Chirag Corporations",
+    "client": "Chirag Corporations",
     "status": "done",
     "priority": "high",
-    "category": "Web Design",
+    "category": "Audit Services",
     "subcategoryDetails": [
       {
         "id": "sub1",
-        "name": "UI/UX Design",
+        "name": "Financial Statement Review",
         "hours": 40,
-        "pricePerHour": 100
+        "pricePerHour": 250
       },
       {
         "id": "sub2",
-        "name": "Frontend Development",
-        "hours": 60,
-        "pricePerHour": 120
+        "name": "Compliance Verification",
+        "hours": 20,
+        "pricePerHour": 225
       }
     ],
-    "startDate": "2023-09-01",
-    "endDate": "2023-11-15",
-    "hours": 100,
-    "totalCost": 14000,
-    "taskId": "PROJ-2023-001"
+    "startDate": "2024-01-15",
+    "endDate": "2024-02-28",
+    "hours": 60,
+    "totalCost": 15300,
+    "taskId": "AUDIT-2024-001"
   },
-  // ... other tasks (keep existing data)
+  {
+    "id": "ct2",
+    "title": "Corporate Tax Strategy",
+    "subtitle": "Tax Planning for Kalash Infotech",
+    "client": "Kalash Infotech",
+    "status": "done",
+    "priority": "medium",
+    "category": "Tax Services",
+    "subcategoryDetails": [
+      {
+        "id": "sub1",
+        "name": "Corporate Tax Planning",
+        "hours": 30,
+        "pricePerHour": 275
+      },
+      {
+        "id": "sub2",
+        "name": "International Tax Consultation",
+        "hours": 15,
+        "pricePerHour": 300
+      }
+    ],
+    "startDate": "2024-03-01",
+    "endDate": "2024-03-20",
+    "hours": 45,
+    "totalCost": 14625,
+    "taskId": "TAX-2024-002"
+  },
+  {
+    "id": "ct3",
+    "title": "Forensic Accounting Investigation",
+    "subtitle": "Financial Irregularities Analysis",
+    "client": "Riddhi Infotech",
+    "status": "done",
+    "priority": "high",
+    "category": "Advisory Services",
+    "subcategoryDetails": [
+      {
+        "id": "sub1",
+        "name": "Forensic Accounting",
+        "hours": 50,
+        "pricePerHour": 295
+      },
+      {
+        "id": "sub2",
+        "name": "Risk Management Review",
+        "hours": 20,
+        "pricePerHour": 265
+      }
+    ],
+    "startDate": "2024-02-10",
+    "endDate": "2024-03-15",
+    "hours": 70,
+    "totalCost": 23450,
+    "taskId": "FORENSIC-2024-003"
+  }
 ];
 
 const CompletedTasks = ({ onEditTask, onCreateInvoice }) => {
@@ -70,8 +125,65 @@ const CompletedTasks = ({ onEditTask, onCreateInvoice }) => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
-  // Memoize tasks to prevent unnecessary re-renders
-  const tasks = useMemo(() => completedTasksData, []);
+  const [tasks, setTasks] = useState([
+    { 
+      id: 't1', 
+      taskId: 'TASK-CA-001',
+      category: 'audit',
+      subcategories: ['financial'],
+      subcategoryDetails: [
+        { id: 'financial', name: 'Financial Statement Audit', pricePerHour: 250, hours: 40 }
+      ],
+      title: 'Preliminary Audit Assessment', 
+      subtitle: 'Initial financial review for Chirag Corporations',
+      startDate: '2024-04-01',
+      endDate: '2024-04-15',
+      client: 'Chirag Corporations',
+      hours: 40,
+      totalCost: 10000,
+      priority: 'high', 
+      boardId: '1',
+      status: 'todo'
+    },
+    { 
+      id: 't2', 
+      taskId: 'TASK-CA-002',
+      category: 'tax',
+      subcategories: ['corporate'],
+      subcategoryDetails: [
+        { id: 'corporate', name: 'Corporate Tax Planning', pricePerHour: 275, hours: 30 }
+      ],
+      title: 'Tax Optimization Strategy', 
+      subtitle: 'Develop tax efficiency plan for Kalash Infotech',
+      startDate: '2024-04-10',
+      endDate: '2024-04-25',
+      client: 'Kalash Infotech',
+      hours: 30,
+      totalCost: 8250,
+      priority: 'medium', 
+      boardId: '2',
+      status: 'inprogress'
+    },
+    { 
+      id: 't3', 
+      taskId: 'TASK-CA-003',
+      category: 'advisory',
+      subcategories: ['risk-management'],
+      subcategoryDetails: [
+        { id: 'risk-management', name: 'Risk Management Consulting', pricePerHour: 265, hours: 25 }
+      ],
+      title: 'Financial Risk Assessment', 
+      subtitle: 'Comprehensive risk evaluation for Riddhi Infotech',
+      startDate: '2024-04-20',
+      endDate: '2024-05-10',
+      client: 'Riddhi Infotech',
+      hours: 25,
+      totalCost: 6625,
+      priority: 'low', 
+      boardId: '3',
+      status: 'review'
+    }
+  ]);
 
   // Memoized sorting and filtering logic
   const sortedTasks = useMemo(() => {

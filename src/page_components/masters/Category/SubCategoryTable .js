@@ -98,7 +98,7 @@ const SubCategoryTable = () => {
                     <Link
                         to={"/editcategory" + row.subCategoryId}
                     >
-                        <button className="btn btn-secondary pt-2" title="Edit">
+                        <button className="btn btn-secondary pt-2 my-1" title="Edit">
                             <i className="icon-pencil"></i>
                         </button>
                     </Link>

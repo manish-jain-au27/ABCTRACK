@@ -1,15 +1,13 @@
 import React, { useEffect } from "react";
 import { connect } from "react-redux";
-import { Link } from "react-router-dom";
 import PageHeader from "../../../components/PageHeader";
 import { Tabs, Tab } from "react-bootstrap";
-import Categories from "./Categories";
-import SubCategories from "./SubCategories";
+import AddFinancialMaster from "./AddFinancialMaster";
 
-const AddCategory = () => {
+const OtherMasters = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = "Add Category Master - ABC Track"
+    document.title = 'Add Other Masters - ABC Track';
   }, [])
 
   return (
@@ -22,11 +20,11 @@ const AddCategory = () => {
       <div>
         <div className="container-fluid">
           <PageHeader
-            HeaderText="Categories"
+            HeaderText="Masters"
             Breadcrumb={[
-              { name: "Masters", navigate: "" },
-              { name: "Category Master", navigate: "" },
-              { name: "Add Category", navigate: "" },
+              { name: "Masters" },
+              { name: "Others Masters" },
+              { name: "Add Others Masters" },
             ]}
           />
           <div className="row clearfix">
@@ -34,15 +32,14 @@ const AddCategory = () => {
               <div className="card">
                 <div className="body">
                   <Tabs
-                    defaultActiveKey="categories"
+                    defaultActiveKey="financhialMaster"
                     id="uncontrolled-tab-example"
                   >
-                    <Tab eventKey="categories" title="Categories">
-                        <Categories />
+                    <Tab eventKey="financhialMaster" title="Financial Masters">
+                      <AddFinancialMaster />
                     </Tab>
-                    <Tab eventKey="subCategories" title="Sub Categories">
-                      <SubCategories />
-                    </Tab>
+                    {/* <Tab eventKey="subCategories" title="Sub Categories">
+                    </Tab> */}
                   </Tabs>
                 </div>
               </div>
@@ -58,4 +55,4 @@ const mapStateToProps = ({ ioTReducer }) => ({
   isSecuritySystem: ioTReducer.isSecuritySystem,
 });
 
-export default connect(mapStateToProps, {})(AddCategory);
+export default connect(mapStateToProps, {})(OtherMasters);

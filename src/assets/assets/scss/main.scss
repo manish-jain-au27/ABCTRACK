@@ -30,8 +30,9 @@
 @import "partials/formwizard";
 @import "partials/tables";
 
-@import '~@fullcalendar/core/main.css';
-@import '~@fullcalendar/daygrid/main.css';
+// Removed FullCalendar CSS imports
+// No CSS imports for FullCalendar in this file
+
 @import "pages/widgets";
 
 @import "pages/page-profile";

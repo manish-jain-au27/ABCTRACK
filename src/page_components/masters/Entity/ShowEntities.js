@@ -1,15 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import { Link } from "react-router-dom";
 import PageHeader from "../../../components/PageHeader";
 
 const ShowEntities = () => {
+
+    useEffect(() => {
+        document.title = 'Entity Master - ABC Track';
+      }, []);
+
     const customStyles = {
         table: {
             style: {
                 borderCollapse: 'collapse',
                 border: '1px solid #ddd',
-                // borderRadius: "10px",
             },
         },
         rows: {
@@ -99,7 +103,7 @@ const ShowEntities = () => {
                     <Link
                         to={"/viewentity" + row.index}
                     >
-                        <button className="btn btn-primary pt-2" title="View">
+                        <button className="btn btn-primary pt-2 my-1" title="View">
                             <i className="icon-eye"></i>
                         </button>
                     </Link>
@@ -108,7 +112,7 @@ const ShowEntities = () => {
                     <Link
                         to={"/editentity" + row.index}
                     >
-                        <button className="btn btn-secondary pt-2" title="Edit">
+                        <button className="btn btn-secondary pt-2 my-1" title="Edit">
                             <i className="icon-pencil"></i>
                         </button>
                     </Link>

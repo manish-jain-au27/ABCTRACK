@@ -17,7 +17,7 @@ import {
 } from "../actions";
 import Logo from "../assets/images/A-logo-dark.png";
 import LogoWhite from "../assets/images/A-logo-white.png";
-import UserImage from "../assets/images/user.png";
+import UserImage from "../assets/images/profile-pic.jpg";
 import Avatar4 from "../assets/images/xs/avatar4.jpg";
 import Avatar5 from "../assets/images/xs/avatar5.jpg";
 import Avatar2 from "../assets/images/xs/avatar2.jpg";
@@ -27,6 +27,7 @@ import Avatar3 from "../assets/images/xs/avatar3.jpg";
 class NavbarMenu extends React.Component {
   state = {
     linkupdate: false,
+    selectedItem: "Select Financial Year"
   };
   componentDidMount() {
     this.props.tostMessageLoad(true);
@@ -48,10 +49,34 @@ class NavbarMenu extends React.Component {
       activeKey === "/categorymaster" ||
       activeKey === "/showcategories" ||
       activeKey === "/showparties" ||
+      activeKey === "/createusers" ||
+      activeKey === "/showusers" ||
+      activeKey === "/viewusers" ||
+      activeKey === "/othermasters" ||
+      activeKey === "/showothermasters" ||
+      activeKey === "/viewothermasters" ||
       activeKey === "/viewparty" ||
       activeKey === "/partymaster"
     ) {
       this.activeMenutabContainer("MastersContainer");
+    } else if (
+      activeKey === "apptaskbar" ||
+      activeKey === "pendingtasks" ||
+      activeKey === "completedtasks"
+    ) {
+      this.activeMenutabContainer("TasksContainer");
+    } else if (
+      activeKey === "/pendingreviews" ||
+      activeKey === "/completedreviews"
+    ) {
+      this.activeMenutabContainer("ReviewContainer");
+    } else if (
+      activeKey === "/allinvoices" ||
+      activeKey === "/pendingpayments" ||
+      activeKey === "/completedpayments" ||
+      activeKey === "/paymenthistory"
+    ) {
+      this.activeMenutabContainer("PaymentContainer");
     } else {
       // this.activeMenutabContainer("dashboradContainer");
     }
@@ -157,7 +182,7 @@ class NavbarMenu extends React.Component {
             </div>
 
             <div className="navbar-right">
-              <form id="navbar-search" className="navbar-form search-form">
+              {/* <form id="navbar-search" className="navbar-form search-form">
                 <input
                   className="form-control"
                   placeholder="Search here..."
@@ -166,7 +191,36 @@ class NavbarMenu extends React.Component {
                 <button type="button" className="btn btn-default">
                   <i className="icon-magnifier"></i>
                 </button>
+              </form> */}
+              <form id="navbar-search" className="navbar-form search-form">
+                <select
+                  className="form-control"
+                >
+                  <option value="SELECT FINANCIAL YEAR">SELECT FINANCIAL YEAR</option>
+                  <option value="2023-2024">2023-2024</option>
+                  <option value="2024-2025">2024-2025</option>
+                </select>
               </form>
+
+              {/* <Dropdown>
+                <Dropdown.Toggle
+                  variant="primary"
+                  id="dropdown-basic"
+                  // className="user-name"
+                >
+                 {this.state.selectedItem ? <strong>{this.state.selectedItem}</strong> : <strong>Select Financial Year</strong>}
+                </Dropdown.Toggle>
+                <Dropdown.Menu className="dropdown-menu">
+                  <Dropdown.Item name="2023-2024" onClick = {(e) => {
+                    this.setState({selectedItem: e.target.value })
+                  }}>
+                    2023-2024
+                  </Dropdown.Item>
+                  <Dropdown.Item name="2024-2025">
+                    2024-2025
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown> */}
 
               <div id="navbar-menu">
                 <ul className="nav navbar-nav">
@@ -360,6 +414,15 @@ class NavbarMenu extends React.Component {
                       <i className="icon-login"></i>
                     </a>
                   </li>
+                  <li>
+                    <button 
+                      type="button" 
+                      className="btn btn-info mr-1"
+                      onClick={() => window.open('https://www.wrraptheme.com/templates/lucid/react/dashboard', '_blank')}
+                    >
+                      <i className="fa fa-external-link"></i> Theme Templates
+                    </button>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -404,8 +467,8 @@ class NavbarMenu extends React.Component {
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
-              <hr />
-              <ul className="row list-unstyled">
+              {/* <hr /> */}
+              {/* <ul className="row list-unstyled">
                 <li className="col-4">
                   <small>Sales</small>
                   <h6>456</h6>
@@ -416,9 +479,9 @@ class NavbarMenu extends React.Component {
                 </li>
                 <li className="col-4">
                   <small>Revenue</small>
-                  <h6>$2.13B</h6>
+                  <h6>₹2.13B</h6>
                 </li>
-              </ul>
+              </ul> */}
             </div>
             <ul className="nav nav-tabs">
               <li className="nav-item">
@@ -506,6 +569,99 @@ class NavbarMenu extends React.Component {
                         </li>
                       </ul>
                     </li>
+                    <li className="" id="TasksContainer">
+                      <a
+                        href="#!"
+                        className="has-arrow"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          this.activeMenutabContainer("TasksContainer");
+                        }}
+                      >
+                        <i className="fa fa-tasks"></i> <span>Task</span>
+                      </a>
+                      <ul className="collapse">
+                        <li
+                          className={activeKey === "apptaskbar" ? "active" : ""}
+                        >
+                          <Link to="apptaskbar">Create Assignment</Link>
+                        </li>
+                        <li
+                          className={activeKey === "pendingtasks" ? "active" : ""}
+                        >
+                          <Link to="/pendingtasks">Pending Tasks</Link>
+                        </li>
+                        <li
+                          className={activeKey === "completedtasks" ? "active" : ""}
+                        >
+                          <Link to="completedtasks">Completed Tasks</Link>
+                        </li>
+                      </ul>
+                    </li>
+                    <li id="ReviewContainer">
+                      <a 
+                        href="#Review" 
+                        className="has-arrow"
+                        onClick={(e) => {
+                          e.preventDefault();
+                        }}
+                      >
+                        <i className="fa fa-star"></i>
+                        <span>Reviews</span>
+                      </a>
+                      <ul>
+                        <li className={activeKey === "/pendingreviews" ? "active" : ""}>
+                          <Link to="/pendingreviews">
+                            <i className="fa fa-clock me-2"></i>
+                            Pending Reviews
+                          </Link>
+                        </li>
+                        <li className={activeKey === "/completedreviews" ? "active" : ""}>
+                          <Link to="/completedreviews">
+                            <i className="fa fa-check-circle me-2"></i>
+                            Completed Reviews
+                          </Link>
+                        </li>
+                      </ul>
+                    </li>
+                    <li id="PaymentContainer">
+                      <a 
+                        href="#Payment" 
+                        className="has-arrow"
+                        onClick={(e) => {
+                          e.preventDefault();
+                        }}
+                      >
+                        <i className="fa fa-money-bill"></i>
+                        <span>Payments</span>
+                      </a>
+                      <ul>
+                        <li className={activeKey === "/allinvoices" ? "active" : ""}>
+                          <Link to="/allinvoices">
+                            <i className="fa fa-file-invoice me-2"></i>
+                            All Invoices
+                          </Link>
+                        </li>
+                        <li className={activeKey === "/pendingpayments" ? "active" : ""}>
+                          <Link to="/pendingpayments">
+                            <i className="fa fa-clock me-2"></i>
+                            Pending Payments
+                          </Link>
+                        </li>
+                        <li className={activeKey === "/completedpayments" ? "active" : ""}>
+                          <Link to="/completedpayments">
+                            <i className="fa fa-check-circle me-2"></i>
+                            Completed Payments
+                          </Link>
+                        </li>
+                        <li className={activeKey === "/paymenthistory" ? "active" : ""}>
+                          <Link to="/paymenthistory">
+                            <i className="fa fa-history me-2"></i>
+                            Payment History
+                          </Link>
+                        </li>
+                      </ul>
+                    </li>
                     <li id="MastersContainer" className="">
                       <a
                         href="#!"
@@ -535,6 +691,24 @@ class NavbarMenu extends React.Component {
                           onClick={() => { }}
                         >
                           <Link to="showparties">Party Master</Link>
+                        </li>
+                        <li
+                          className={activeKey === "createusers" || activeKey === "viewusers" || activeKey === "showusers" ? "active" : ""}
+                          onClick={() => { }}
+                        >
+                          <Link to="showusers">Users Master</Link>
+                        </li>
+                        <li
+                          className={activeKey === "othermasters" || activeKey === "showothermasters" || activeKey === "showothermasters" ? "active" : ""}
+                          onClick={() => { }}
+                        >
+                          <Link to="showothermasters">Others Master</Link>
+                        </li>
+                        <li
+                          className={activeKey === "tasktemplates" ? "active" : ""}
+                          onClick={() => { }}
+                        >
+                          <Link to="tasktemplates">Task Templates</Link>
                         </li>
                       </ul>
                     </li>
@@ -591,10 +765,14 @@ class NavbarMenu extends React.Component {
                   <li className="offline">
                     <Link to="#">
                       <div className="media">
-                        <img className="media-object " src={Avatar2} alt="" />
+                        <div className="media-left">
+                          <img className="media-object " src={Avatar2} alt="" />
+                        </div>
                         <div className="media-body">
                           <span className="name">Isabella</span>
-                          <span className="message">CEO, Thememakker</span>
+                          <span className="message">
+                            CEO, Thememakker
+                          </span>
                           <span className="badge badge-outline status"></span>
                         </div>
                       </div>
@@ -620,7 +798,9 @@ class NavbarMenu extends React.Component {
                         <img className="media-object " src={Avatar3} alt="" />
                         <div className="media-body">
                           <span className="name">Alexander</span>
-                          <span className="message">Writter, Mag Editor</span>
+                          <span className="message">
+                            Writter, Mag Editor
+                          </span>
                           <span className="badge badge-outline status"></span>
                         </div>
                       </div>

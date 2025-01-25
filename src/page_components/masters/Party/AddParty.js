@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import PageHeader from "../../../components/PageHeader";
 import { Dropdown } from "react-bootstrap";
 import Notification from "../../../components/Notification";
@@ -8,6 +8,10 @@ const AddParty = () => {
     const [selectedItem, setSelectedItem] = useState('');
 
     const toggleToast = () => setShowSuccess(!showSuccess);
+
+    useEffect(() => {
+        document.title = 'Add Party Master - ABC Track';
+      }, []);
 
     const handleSelect = (name) => {
         setSelectedItem(name);

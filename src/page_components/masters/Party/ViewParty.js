@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import PageHeader from "../../../components/PageHeader";
 import { Dropdown } from "react-bootstrap";
 
@@ -6,6 +6,10 @@ const ViewParty = () => {
     const [showSuccess, setShowSuccess] = useState(false);
 
     const toggleToast = () => setShowSuccess(!showSuccess);
+
+    useEffect(() => {
+        document.title = 'View Party Master - ABC Track';
+    }, []);
 
     return (
         <div

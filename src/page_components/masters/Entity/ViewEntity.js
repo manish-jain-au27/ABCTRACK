@@ -1,8 +1,13 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import PageHeader from "../../../components/PageHeader";
 import { Dropdown } from "react-bootstrap";
 
 const ViewEntity = () => {
+
+    useEffect(() => {
+        document.title = 'View Entity Master - ABC Track';
+    }, []);
+
     const [bankRows, setBankRows] = useState([
         {
             bankName: 'AXIS BANK LTD',

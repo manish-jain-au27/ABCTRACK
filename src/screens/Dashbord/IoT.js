@@ -36,6 +36,7 @@ import {
 class IoT extends React.Component {
   componentDidMount() {
     window.scrollTo(0, 0);
+    document.title= "IoT Dashboard - ABC Track"
   }
   render() {
     const {

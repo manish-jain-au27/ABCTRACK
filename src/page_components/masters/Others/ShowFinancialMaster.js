@@ -2,7 +2,7 @@ import DataTable from "react-data-table-component";
 import { Link } from "react-router-dom";
 import React, { useState } from "react";
 
-const CategoryTable = () => {
+const ShowFinancialMaster = () => {
     const customStyles = {
         table: {
             style: {
@@ -39,37 +39,45 @@ const CategoryTable = () => {
 
     const data = [
         {
-            categoryId: "1",
-            categoryName: "GST",
+            index: "1",
+            startYear: "2023",
+            endYear: "2024",
+            yearName: "FY23-24",
         },
         {
-            categoryId: "2",
-            categoryName: "TAX",
-        },
-        {
-            categoryId: "3",
-            categoryName: "NON GST",
-        },
-        {
-            categoryId: "4",
-            categoryName: "ABC",
+            index: "2",
+            startYear: "2024",
+            endYear: "2025",
+            yearName: "FY24-25",
         },
     ]
 
     const columns = [
         {
-            name: "Category Id",
-            selector: (row) => row.categoryId,
+            name: "Sr. No.",
+            selector: (row) => row.index,
             sortable: true,
             wrap: true,
-            // width: "10%",
+            width: "10%",
         },
         {
-            name: "Category Name",
-            selector: (row) => row.categoryName,
+            name: "Financial Start Year",
+            selector: (row) => row.startYear,
             sortable: true,
             wrap: true,
             // width: "30%",
+        },
+        {
+            name: "Financial End Year",
+            selector: (row) => row.endYear,
+            sortable: true,
+            wrap: true,
+        },
+        {
+            name: "Financial Year Name",
+            selector: (row) => row.yearName,
+            sortable: true,
+            wrap: true,
         },
         {
             name: "Actions",
@@ -104,19 +112,27 @@ const CategoryTable = () => {
 
     const handleSearch = (e) => {
         let searchValue;
-        let categoryIdValue;
-        let categoryNameValue;
+        let indexValue;
+        let startYearValue;
+        let endYearValue;
+        let yearNameValue;
 
         const newRows = data.filter((row) => {
-            categoryIdValue = row.categoryId
+            indexValue = row.index
                 .toString()
                 .includes(e.target.value);
-            categoryNameValue = row.categoryName.toLowerCase().includes(e.target.value.toLowerCase());
+            startYearValue = row.startYear.toLowerCase().includes(e.target.value.toLowerCase());
+            endYearValue = row.endYear.toLowerCase().includes(e.target.value.toLowerCase());
+            yearNameValue = row.yearName.toLowerCase().includes(e.target.value.toLowerCase());
 
-            if (categoryNameValue) {
-                searchValue = categoryNameValue;
-            } else if (categoryIdValue) {
-                searchValue = categoryIdValue;
+            if (yearNameValue) {
+                searchValue = yearNameValue;
+            } else if (startYearValue) {
+                searchValue = startYearValue;
+            } else if (endYearValue) {
+                searchValue = endYearValue;
+            } else if (indexValue) {
+                searchValue = indexValue;
             } else {
                 searchValue = "";
             }
@@ -131,15 +147,15 @@ const CategoryTable = () => {
         <div>
             <div className="header d-flex justify-content-between">
                 <h2>
-                    All Categories
+                    All Financial Years
                     <small>
-                        All Categories are shown below within the table.
+                        All Financial Years are shown below within the table.
                     </small>
                 </h2>
-                <Link to="/categorymaster">
+                <Link to="/othermasters">
                     <button className="btn theme-bg-primary rounded-pill" type="button">
                         <i className="fa fa-plus-circle"></i>&nbsp;&nbsp;
-                        <span>Add Category</span>
+                        <span>Add Financial Year</span>
                     </button>
                 </Link>
             </div>
@@ -169,4 +185,4 @@ const CategoryTable = () => {
     )
 }
 
-export default CategoryTable;
+export default ShowFinancialMaster;

@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { connect } from "react-redux";
-import PropTypes from "prop-types";
 import Logo from "../assets/images/A-logo-white.png";
-import { updateEmail, updatePassword, onLoggedin } from "../actions";
 
 const Login = () => {
   const [isLoad, setIsLoad] = useState(true);
@@ -19,13 +16,18 @@ const Login = () => {
     document.body.classList.remove("theme-green");
     document.body.classList.remove("theme-orange");
     document.body.classList.remove("theme-blush");
+    document.title = "Login - ABC Track"
   }, [])
 
   return (
     <div className="theme-cyan">
       <div className="page-loader-wrapper" style={{ display: isLoad ? 'block' : 'none' }}>
         <div className="loader">
-          <div className="m-t-30"><img src={require('../assets/images/logo-icon.svg')} width="48" height="48" alt="Lucid" /></div>
+          <div className="m-t-30">
+            {/* <img src={require('../assets/images/logo-icon.svg')} width="48" height="48" alt="Lucid" /> */}
+              <img src={Logo} alt="Logo" style={{ height: "40px", width: "40px", margin: "10px 0px 10px 10px" }} />
+              <p style={{ fontSize: "25px", fontWeight: "bold", color: "white", margin: "0px 10px 10px 8px" }}>ABC TRACK</p>
+          </div>
           <p>Please wait...</p>
         </div>
       </div>
@@ -34,8 +36,8 @@ const Login = () => {
           <div className="vertical-align-middle auth-main">
             <div className="auth-box">
               <div className="top" style={{ position: "relative" }}>
-                <img src={Logo} alt="Lucid" style={{ height: "40px", width: "40px", margin: "10px 0px 10px 10px" }} />
-                <p style={{fontSize: "35px", fontWeight: "bold", color: "white", margin: "0px 10px 10px 8px", display: "inline", position: "absolute", top: "2px"}}>ABC TRACK</p>
+                <img src={Logo} alt="Logo" style={{ height: "40px", width: "40px", margin: "10px 0px 10px 10px" }} />
+                <p style={{ fontSize: "35px", fontWeight: "bold", color: "white", margin: "0px 10px 10px 8px", display: "inline", position: "absolute", top: "2px" }}>ABC TRACK</p>
               </div>
               <div className="card">
                 <div className="header">
@@ -88,10 +90,10 @@ const Login = () => {
                           Forgot password?
                         </a>
                       </span>
-                      <span>
+                      {/* <span>
                         Don't have an account?{" "}
                         <a href="registration" >Register</a>
-                      </span>
+                      </span> */}
                     </div>
                   </div>
                 </div>

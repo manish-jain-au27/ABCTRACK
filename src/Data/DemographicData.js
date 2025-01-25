@@ -58,7 +58,7 @@ export const demographicTopCardData = [
   },
   {
     heading: "Growth",
-    result: "$1,243",
+    result: "₹1,243",
     sparklineData: {
       type: "line",
       data: [9, 4, 6, 5, 6, 4, 7, 3],

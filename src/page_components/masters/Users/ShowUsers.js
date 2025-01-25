@@ -3,17 +3,16 @@ import DataTable from "react-data-table-component";
 import { Link } from "react-router-dom";
 import PageHeader from "../../../components/PageHeader";
 
-const ShowParties = () => {
-useEffect(() => {
-    document.title = 'Party Master - ABC Track';
-  }, []);
+const ShowUsers = () => {
+    useEffect(() => {
+        document.title = 'User Master - ABC Track';
+    }, []);
 
     const customStyles = {
         table: {
             style: {
                 borderCollapse: 'collapse',
                 border: '1px solid #ddd',
-                // borderRadius: "10px",
             },
         },
         rows: {
@@ -44,55 +43,35 @@ useEffect(() => {
 
     const data = [
         {
-            clientCode: "461",
-            clientName: "DARSHAN JAIN",
-            panNo: "ELGPU1122E",
-            emailId: "darshanjain@gmail.com"
+            userId: "1",
+            userName: "DARSHAN JAIN",
+            userType: "OWNER",
         },
         {
-            clientCode: "545",
-            clientName: "MANOJ",
-            panNo: "SDDFSF32F",
-            emailId: "manoj@gmail.com"
-        },
-        {
-            clientCode: "546",
-            clientName: "SWATHI",
-            panNo: "BVXCVXV45G",
-            emailId: "swathi@gmail.com"
-        },
-        {
-            clientCode: "547",
-            clientName: "RUCHITANJALI",
-            panNo: "ASDFGH76TT",
-            emailId: "ruchitanjali@gmail.com"
+            userId: "2",
+            userName: "MANOJ",
+            userType: "EXECUTIVE",
         },
     ]
 
     const columns = [
         {
-            name: "Client Code",
-            selector: (row) => row.clientCode,
+            name: "User Id",
+            selector: (row) => row.userId,
             sortable: true,
             wrap: true,
-            width: "14%",
+            width: "10%",
         },
         {
-            name: "Client Name",
-            selector: (row) => row.clientName,
+            name: "User Name",
+            selector: (row) => row.userName,
             sortable: true,
             wrap: true,
             width: "30%",
         },
         {
-            name: "Pan No",
-            selector: (row) => row.panNo,
-            sortable: true,
-            wrap: true,
-        },
-        {
-            name: "Email Id",
-            selector: (row) => row.emailId,
+            name: "User Type",
+            selector: (row) => row.userType,
             sortable: true,
             wrap: true,
         },
@@ -101,7 +80,7 @@ useEffect(() => {
             selector: (row) => (
                 <>
                     <Link
-                        to={"/viewparty" + row.clientCode}
+                        to={"/viewusers" + row.userId}
                     >
                         <button className="btn btn-primary pt-2 my-1" title="View">
                             <i className="icon-eye"></i>
@@ -110,7 +89,7 @@ useEffect(() => {
                     &nbsp;
                     &nbsp;
                     <Link
-                        to={"/editparty" + row.clientCode}
+                        to={"/editusers" + row.index}
                     >
                         <button className="btn btn-secondary pt-2 my-1" title="Edit">
                             <i className="icon-pencil"></i>
@@ -129,32 +108,26 @@ useEffect(() => {
 
     const handleSearch = (e) => {
         let searchValue;
-        let clientCode;
-        let clientName;
-        let emailId;
-        let panNoValue;
+        let userIdValue;
+        let userNameValue;
+        let userTypeValue;
 
         const newRows = data.filter((row) => {
-            clientCode = row.clientCode
+            userIdValue = row.userId
                 .toString()
                 .includes(e.target.value);
-            clientName = row.clientName.toLowerCase().includes(e.target.value.toLowerCase());
-            emailId = row.emailId
-                .toLowerCase()
-                .includes(e.target.value.toLowerCase());
-            panNoValue = row.panNo
+            userNameValue = row.userName.toLowerCase().includes(e.target.value.toLowerCase());
+            userTypeValue = row.userType
                 .toLowerCase()
                 .includes(e.target.value.toLowerCase());
 
 
-            if (clientName) {
-                searchValue = clientName;
-            } else if (emailId) {
-                searchValue = emailId;
-            } else if (clientCode) {
-                searchValue = clientCode;
-            } else if (panNoValue) {
-                searchValue = panNoValue;
+            if (userNameValue) {
+                searchValue = userNameValue;
+            } else if (userTypeValue) {
+                searchValue = userTypeValue;
+            } else if (userIdValue) {
+                searchValue = userIdValue;
             } else {
                 searchValue = "";
             }
@@ -177,7 +150,7 @@ useEffect(() => {
                         HeaderText="Masters"
                         Breadcrumb={[
                             { name: "Masters" },
-                            { name: "Party Master" },
+                            { name: "Users Master" },
                         ]}
                     />
                     <div className="row clearfix">
@@ -185,15 +158,15 @@ useEffect(() => {
                             <div className="card">
                                 <div className="header d-flex justify-content-between">
                                     <h2>
-                                        All Parties
+                                        All Users
                                         <small>
-                                            All Parties are shown below within the table.
+                                            All Users are shown below within the table.
                                         </small>
                                     </h2>
-                                    <Link to="/partymaster">
+                                    <Link to="/createusers">
                                         <button className="btn theme-bg-primary rounded-pill" type="button">
                                             <i className="fa fa-plus-circle"></i>&nbsp;&nbsp;
-                                            <span>Add Party</span>
+                                            <span>Create Users</span>
                                         </button>
                                     </Link>
                                 </div>
@@ -215,6 +188,7 @@ useEffect(() => {
                                         columns={columns}
                                         customStyles={customStyles}
                                         pagination
+                                        responsive
                                         // highlightOnHover
                                         fixedHeaderScrollHeight="800px"
                                     ></DataTable>
@@ -228,4 +202,4 @@ useEffect(() => {
     )
 }
 
-export default ShowParties;
+export default ShowUsers;

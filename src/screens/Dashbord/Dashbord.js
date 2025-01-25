@@ -49,6 +49,7 @@ class Dashbord extends React.Component {
       cardData: [...sparkleCardData],
     });
 
+      document.title = 'Analytical Dashboard - ABC Track';
     this.chartPlace();
   }
 

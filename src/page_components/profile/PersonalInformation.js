@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { connect } from "react-redux";
-import imageuser from "../../assets/images/user.png";
+import imageuser from "../../assets/images/profile-pic.jpg";
 import { SlPhone } from "react-icons/sl";
 import { FaWhatsapp, FaRegAddressCard } from "react-icons/fa";
 import { IoMdMail } from "react-icons/io";
@@ -15,9 +15,7 @@ const PersonalInformation = () => {
       // console.log(e.target.files[0], fileURL);
       setLogoPreview(fileURL);
 
-      setTimeout(() => {
-        URL.revokeObjectURL(fileURL);
-      }, 5000);
+      // URL.revokeObjectURL(fileURL);
     }
   };
 
@@ -46,6 +44,7 @@ const PersonalInformation = () => {
               <input
                 id="filePhoto"
                 type="file"
+                accept="*/image"
                 onChange={loadFile}
                 hidden
               />

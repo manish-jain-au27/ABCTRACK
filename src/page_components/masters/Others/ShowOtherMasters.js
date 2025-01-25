@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import PageHeader from "../../../components/PageHeader";
 import { Tabs, Tab } from "react-bootstrap";
-import CategoryTable from "./CategoryTable";
-import SubCategoryTable from "./SubCategoryTable ";
+import ShowFinancialMaster from "./ShowFinancialMaster";
 
-const ShowCategories = () => {
+const ShowOtherMasters = () => {
     useEffect(() => {
-        document.title = 'Category Master - ABC Track';
+        document.title = 'Other Masters - ABC Track';
       }, []);
+
     return (
         <div
             onClick={() => {
@@ -20,7 +20,7 @@ const ShowCategories = () => {
                         HeaderText="Masters"
                         Breadcrumb={[
                             { name: "Masters" },
-                            { name: "Category Master" },
+                            { name: "Others Master" },
                         ]}
                     />
                     <div className="row clearfix">
@@ -28,14 +28,11 @@ const ShowCategories = () => {
                             <div className="card">
                                 <div className="body">
                                     <Tabs
-                                        defaultActiveKey="categories"
+                                        defaultActiveKey="financialMasters"
                                         id="uncontrolled-tab-example"
                                     >
-                                        <Tab eventKey="categories" title="Categories">
-                                           <CategoryTable/>
-                                        </Tab>
-                                        <Tab eventKey="subcategories" title="Sub Categories">
-                                            <SubCategoryTable />
+                                        <Tab eventKey="financialMasters" title="Financial Masters">
+                                            <ShowFinancialMaster />
                                         </Tab>
                                     </Tabs>
                                 </div>
@@ -48,4 +45,4 @@ const ShowCategories = () => {
     )
 }
 
-export default ShowCategories;
+export default ShowOtherMasters;

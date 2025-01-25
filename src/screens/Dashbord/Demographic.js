@@ -29,6 +29,7 @@ class Demographic extends React.Component {
     window.scrollTo(0, 0);
     this.chartPlace();
     this.chartPlace1();
+    document.title = 'Demographic Dashboard - ABC Track'
   }
 
   chartPlace = () => {

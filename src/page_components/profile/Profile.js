@@ -11,6 +11,7 @@ import Agreement from "./Agreement";
 const Profile = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
+    document.title= "Profile - ABC Track"
   }, [])
 
   return (

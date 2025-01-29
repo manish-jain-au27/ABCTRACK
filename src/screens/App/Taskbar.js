@@ -73,7 +73,12 @@ const AppTaskbar = () => {
     formattedHours: '0:00'
   });
   const [viewTaskModalOpen, setViewTaskModalOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedTask, setSelectedTask] = useState({
+    title: '',
+    rows: [],
+    ratePerHour: 0,  
+    totalCost: 0     
+  });
 
   const [selectedClients, setSelectedClients] = useState([]);
 
@@ -196,8 +201,16 @@ const AppTaskbar = () => {
   };
 
   // Add New Task Row
-  const addTaskRow = (newRow) => {
-    const updatedRows = [...taskRows, newRow];
+  const addTaskRow = (newRow = {}) => {
+    const defaultRow = {
+      title: newRow.title || '',
+      minutes: newRow.minutes || 0,
+      percentage: newRow.percentage || 0,
+      status: newRow.status || 'Not Started',
+      rate: newRow.rate || 0
+    };
+
+    const updatedRows = [...taskRows, defaultRow];
     setTaskRows(updatedRows);
 
     const costDetails = calculateRealTimeCost(updatedRows);
@@ -337,7 +350,12 @@ const AppTaskbar = () => {
 
  
   const viewTask = (row) => {
-    setSelectedTask(row);
+    setSelectedTask({
+      ...selectedTask,
+      ...row,
+      ratePerHour: row.ratePerHour || selectedTask.ratePerHour || 0,
+      totalCost: row.totalCost || selectedTask.totalCost || 0
+    });
     setViewTaskModalOpen(true);
   };
 
@@ -610,7 +628,12 @@ const AppTaskbar = () => {
               transition: 'all 0.3s ease'
             }}
             onClick={() => {
-              setSelectedTask(row);
+              setSelectedTask({
+                ...selectedTask,
+                ...row,
+                ratePerHour: row.ratePerHour || selectedTask.ratePerHour || 0,
+                totalCost: row.totalCost || selectedTask.totalCost || 0
+              });
               setViewTaskModalOpen(true);
             }}
           >
@@ -1019,7 +1042,12 @@ const AppTaskbar = () => {
                                 to="#" 
                                 className="btn btn-outline-info mr-1" 
                                 onClick={() => {
-                                  setSelectedTask(task);
+                                  setSelectedTask({
+                                    ...selectedTask,
+                                    ...task,
+                                    ratePerHour: task.ratePerHour || selectedTask.ratePerHour || 0,
+                                    totalCost: task.totalCost || selectedTask.totalCost || 0
+                                  });
                                   setViewTaskModalOpen(true);
                                 }}
                               >
@@ -1259,22 +1287,8 @@ const AppTaskbar = () => {
                               {paymentType === 'lumpsum' ? (
                                 <th className="text-center" style={{ width: '150px' }}>
                                   <div className="d-flex flex-column align-items-center">
-                                    <div className="input-group mb-1">
-                                      <div className="input-group-prepend">
-                                        <span className="input-group-text">
-                                          <i className="fa fa-hourglass-half"></i>
-                                        </span>
-                                      </div>
-                                      <input
-                                        type="text"
-                                        className="form-control text-center"
-                                        style={{ maxWidth: '100px' }}
-                                        value={taskRows[0].minutes}
-                                        onChange={(e) => updateTaskRow(0, 'minutes', e.target.value)}
-                                        placeholder="Minutes"
-                                      />
-                                    </div>
-                                    <span>Minutes</span>
+                                   
+                                    <span>Rate</span>
                                   </div>
                                 </th>
                               ) : (

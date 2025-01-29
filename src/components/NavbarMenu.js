@@ -76,7 +76,7 @@ class NavbarMenu extends React.Component {
       activeKey === "/completedpayments" ||
       activeKey === "/paymenthistory"
     ) {
-      this.activeMenutabContainer("PaymentContainer");
+      this.activeMenutabContainer("PaymentsContainer");
     } else {
       // this.activeMenutabContainer("dashboradContainer");
     }
@@ -599,43 +599,41 @@ class NavbarMenu extends React.Component {
                       </ul>
                     </li>
                     <li id="ReviewContainer">
-                      <a 
-                        href="#Review" 
+                      <a
+                        href="#!"
                         className="has-arrow"
                         onClick={(e) => {
                           e.preventDefault();
+                          this.activeMenutabContainer("ReviewContainer");
                         }}
                       >
-                        <i className="fa fa-star"></i>
-                        <span>Reviews</span>
+                        <i className="fa fa-star"></i> <span>Review</span>
                       </a>
-                      <ul>
+                      <ul className="collapse">
                         <li className={activeKey === "/pendingreviews" ? "active" : ""}>
                           <Link to="/pendingreviews">
-                            <i className="fa fa-clock me-2"></i>
-                            Pending Reviews
+                            <i className="fa fa-clock me-2"></i>Pending Reviews
                           </Link>
                         </li>
                         <li className={activeKey === "/completedreviews" ? "active" : ""}>
                           <Link to="/completedreviews">
-                            <i className="fa fa-check-circle me-2"></i>
-                            Completed Reviews
+                            <i className="fa fa-check-circle me-2"></i>Completed Reviews
                           </Link>
                         </li>
                       </ul>
                     </li>
-                    <li id="PaymentContainer">
-                      <a 
-                        href="#Payment" 
+                    <li className="" id="PaymentsContainer">
+                      <a
+                        href="#!"
                         className="has-arrow"
                         onClick={(e) => {
                           e.preventDefault();
+                          this.activeMenutabContainer("PaymentsContainer");
                         }}
                       >
-                        <i className="fa fa-money-bill"></i>
-                        <span>Payments</span>
+                        <i className="fa fa-money"></i> <span>Payments</span>
                       </a>
-                      <ul>
+                      <ul className="collapse">
                         <li className={activeKey === "/allinvoices" ? "active" : ""}>
                           <Link to="/allinvoices">
                             <i className="fa fa-file-invoice me-2"></i>

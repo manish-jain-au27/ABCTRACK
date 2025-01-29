@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Form, Modal, Row, Col, Alert } from 'react-bootstrap';
+import { Card, Button, Form, Modal, Row, Col, Alert, Badge } from 'react-bootstrap';
 import PageHeader from "../../components/PageHeader";
 import DataTable from "react-data-table-component";
 import Rating from 'react-rating-stars-component';
@@ -13,9 +13,13 @@ const PendingReviews = () => {
   const [rating, setRating] = useState(0);
   const [price, setPrice] = useState('');
   const [remarks, setRemarks] = useState('');
+  const [showRemarksSection, setShowRemarksSection] = useState(false);
+  const [submittedRemarks, setSubmittedRemarks] = useState(null);
   const [selectedEntity, setSelectedEntity] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [completedTasks, setCompletedTasks] = useState([]);
+  const [selectedField, setSelectedField] = useState('');
+  const [selectedSkill, setSelectedSkill] = useState('');
 
   // Mock data for pending tasks
   const mockTasks = [
@@ -81,6 +85,20 @@ const PendingReviews = () => {
     { id: 3, name: "Quick Review Template" }
   ];
 
+  const fields = [
+    { id: 1, name: "Technical" },
+    { id: 2, name: "Communication" },
+    { id: 3, name: "Management" },
+    { id: 4, name: "Creative" }
+  ];
+
+  const skills = [
+    { id: 1, name: "Programming" },
+    { id: 2, name: "Design" },
+    { id: 3, name: "Writing" },
+    { id: 4, name: "Analysis" }
+  ];
+
   const handleReviewClick = (task) => {
     setSelectedTask(task);
     setPrice(task.ratePerHour);
@@ -105,18 +123,53 @@ const PendingReviews = () => {
     },
     {
       name: 'Status',
-      cell: row => (
-        <span 
-          className={`badge rounded-pill text-uppercase fw-bold px-3 py-2 bg-warning text-dark`}
-          style={{
-            fontSize: '0.75rem',
-            letterSpacing: '0.05em',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-          }}
-        >
-          {row.status}
-        </span>
-      ),
+      cell: row => {
+        // Determine status color and style
+        const getStatusStyle = (status) => {
+          switch(status.toLowerCase()) {
+            case 'pending':
+              return {
+                backgroundColor: '#dc3545', // Bootstrap danger red
+                color: 'white',
+                borderColor: '#dc3545'
+              };
+            case 'in progress':
+              return {
+                backgroundColor: '#ffc107', // Bootstrap warning yellow
+                color: 'black',
+                borderColor: '#ffc107'
+              };
+            case 'completed':
+              return {
+                backgroundColor: '#28a745', // Bootstrap success green
+                color: 'white',
+                borderColor: '#28a745'
+              };
+            default:
+              return {
+                backgroundColor: '#6c757d', // Bootstrap secondary gray
+                color: 'white',
+                borderColor: '#6c757d'
+              };
+          }
+        };
+
+        const statusStyle = getStatusStyle(row.status);
+
+        return (
+          <span 
+            className="badge rounded-pill text-uppercase fw-bold px-3 py-2"
+            style={{
+              backgroundColor: statusStyle.backgroundColor,
+              color: statusStyle.color,
+              border: `1px solid ${statusStyle.borderColor}`
+            }}
+          >
+            {row.status}
+          </span>
+        );
+      },
+      sortable: true,
     },
     {
       name: 'Minutes',
@@ -195,46 +248,213 @@ const PendingReviews = () => {
     }
   };
 
+  const handleSubmitReview = async () => {
+    try {
+      // Add your API call here to update the task status and send review
+      const reviewData = {
+        taskId: selectedTask.taskId,
+        rating,
+        price,
+        remarks,
+        entityId: selectedEntity,
+        templateId: selectedTemplate
+      };
+      
+      console.log('Sending review:', reviewData);
+      // Update task status to "Review Completed"
+      
+      // Close all modals and reset state
+      setShowTaskModal(false);
+      setSelectedTask(null);
+      setRating(0);
+      setPrice('');
+      setRemarks('');
+      setSelectedEntity('');
+      setSelectedTemplate('');
+      
+      // Refresh the task list
+      // Add your refresh logic here
+      
+    } catch (error) {
+      console.error('Error sending review:', error);
+      // Add error handling
+    }
+  };
+
+  const handleSaveAndContinue = () => {
+    // Validate remarks
+    if (remarks.trim() === '') {
+      // Show error or prevent submission
+      return;
+    }
+
+    // Save remarks
+    setSubmittedRemarks({
+      text: remarks,
+      timestamp: new Date(),
+      task: selectedTask
+    });
+
+    // Reset remark input and show remarks section
+    setShowRemarksSection(true);
+    setRemarks('');
+  };
+
+  const renderRemarksSection = () => {
+    return (
+      <Card className="mt-3">
+        <Card.Header>
+          <h5 className="mb-0">Remarks</h5>
+        </Card.Header>
+        <Card.Body>
+          {/* Remarks Input */}
+          <Form.Group className="mb-3">
+            <Form.Label>Add Remarks</Form.Label>
+            <Form.Control 
+              as="textarea" 
+              rows={3}
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              placeholder="Enter your remarks here..."
+            />
+          </Form.Group>
+
+          <Button 
+            variant="primary" 
+            onClick={handleSaveAndContinue}
+            className="me-2"
+          >
+            Save and Continue
+          </Button>
+
+          {/* Submitted Remarks Display */}
+          {submittedRemarks && (
+            <Card className="mt-3 bg-light">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <strong>Previous Remarks</strong>
+                  <small className="text-muted">
+                    {submittedRemarks.timestamp.toLocaleString()}
+                  </small>
+                </div>
+                <p>{submittedRemarks.text}</p>
+                <Badge bg="info">
+                  Task: {submittedRemarks.task.title}
+                </Badge>
+              </Card.Body>
+            </Card>
+          )}
+        </Card.Body>
+      </Card>
+    );
+  };
+
   const renderEntityModal = () => (
     <Modal 
       show={showEntityModal} 
       onHide={() => setShowEntityModal(false)}
       size="lg"
       centered
-      dialogClassName="custom-modal-style"
     >
-      <Modal.Header 
-        closeButton 
-        className="border-bottom-0 pb-0"
-      >
-        <Modal.Title className="w-100">
-          <h4 className="mb-0 text-primary fw-bold">Select Entity</h4>
+      <Modal.Header closeButton>
+        <Modal.Title>
+          <h2>Task Review <small>Entity and Template Selection</small></h2>
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body className="pt-1">
-        <Card className="shadow-sm border-0" style={{ borderRadius: '12px' }}>
-          <Card.Body className="p-4">
-            <Form>
-              <Form.Group>
-                <Form.Label className="text-muted mb-3 text-uppercase">Entity</Form.Label>
-                <Form.Select
-                  className="form-control"
-                  value={selectedEntity}
-                  onChange={(e) => setSelectedEntity(e.target.value)}
-                >
-                  <option value="">Select an entity...</option>
-                  {entities.map(entity => (
-                    <option key={entity.id} value={entity.id}>
-                      {entity.name}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Form>
+      <Modal.Body>
+        <Card className="mb-3">
+          <Card.Header>
+            <h2>
+              <strong>Step 1:</strong> Select Entity
+              {selectedEntity && (
+                <span className="text-success float-end">
+                  <i className="fa fa-check-circle me-2"></i>
+                  {entities.find(entity => entity.id === selectedEntity)?.name || 'Selected Entity'}
+                </span>
+              )}
+            </h2>
+          </Card.Header>
+          <Card.Body>
+            {!selectedEntity ? (
+              <Row>
+                {entities.map((entity) => (
+                  <Col key={entity.id} md={4} className="mb-3">
+                    <Card 
+                      onClick={() => setSelectedEntity(entity.id)}
+                      className="hover-shadow"
+                      style={{ 
+                        cursor: 'pointer', 
+                        transition: 'all 0.3s ease',
+                        border: selectedEntity === entity.id ? '2px solid #28a745' : '1px solid #dee2e6'
+                      }}
+                    >
+                      <Card.Body className="text-center">
+                        <Card.Title className="mb-2">{entity.name}</Card.Title>
+                        <p className="text-muted small">Click to select this entity</p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            ) : (
+              <Alert variant="info" className="text-center">
+                Entity "{entities.find(entity => entity.id === selectedEntity)?.name || 'Selected Entity'}" has been selected. 
+                Proceed to select a review template.
+              </Alert>
+            )}
           </Card.Body>
         </Card>
+
+        <Card className={`mb-3 ${!selectedEntity ? 'opacity-50' : ''}`}>
+          <Card.Header>
+            <h2>
+              <strong>Step 2:</strong> Select Review Template
+              {selectedTemplate && (
+                <span className="text-success float-end">
+                  <i className="fa fa-check-circle me-2"></i>
+                  {templates.find(template => template.id === selectedTemplate)?.name || 'Selected Template'}
+                </span>
+              )}
+            </h2>
+          </Card.Header>
+          <Card.Body>
+            {selectedEntity && !selectedTemplate ? (
+              <Row>
+                {templates.map((template) => (
+                  <Col key={template.id} md={4} className="mb-3">
+                    <Card 
+                      onClick={() => setSelectedTemplate(template.id)}
+                      className="hover-shadow"
+                      style={{ 
+                        cursor: 'pointer', 
+                        transition: 'all 0.3s ease',
+                        border: selectedTemplate === template.id ? '2px solid #28a745' : '1px solid #dee2e6'
+                      }}
+                    >
+                      <Card.Body className="text-center">
+                        <Card.Title className="mb-2">{template.name}</Card.Title>
+                        <p className="text-muted small">Click to select this template</p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            ) : selectedEntity && selectedTemplate ? (
+              <Alert variant="success" className="text-center">
+                Template "{templates.find(template => template.id === selectedTemplate)?.name || 'Selected Template'}" has been selected. 
+                You can now start the review.
+              </Alert>
+            ) : (
+              <Alert variant="warning" className="text-center">
+                Please select an entity first to enable template selection.
+              </Alert>
+            )}
+          </Card.Body>
+        </Card>
+
+        {selectedEntity && selectedTemplate && renderRemarksSection()}
       </Modal.Body>
-      <Modal.Footer className="border-top-0">
+      <Modal.Footer>
         <Button 
           variant="secondary" 
           onClick={() => setShowEntityModal(false)}
@@ -244,83 +464,218 @@ const PendingReviews = () => {
         </Button>
         <Button 
           variant="primary" 
-          onClick={() => {
-            setShowEntityModal(false);
-            setShowTemplateModal(true);
-          }}
-          disabled={!selectedEntity}
+          onClick={() => {/* Add logic to proceed */}}
+          disabled={!(selectedEntity && selectedTemplate)}
           className="px-4"
         >
-          Continue
+          Proceed
         </Button>
       </Modal.Footer>
     </Modal>
   );
 
-  const renderTemplateModal = () => (
+  const renderTaskModal = () => (
     <Modal 
-      show={showTemplateModal} 
-      onHide={() => setShowTemplateModal(false)}
+      show={showTaskModal} 
+      onHide={() => setShowTaskModal(false)}
       size="lg"
       centered
-      dialogClassName="custom-modal-style"
     >
-      <Modal.Header 
-        closeButton 
-        className="border-bottom-0 pb-0"
-      >
-        <Modal.Title className="w-100">
-          <h4 className="mb-0 text-primary fw-bold">Select Template</h4>
-        </Modal.Title>
+      <Modal.Header closeButton className="border-bottom-0 pb-0">
+        <Modal.Title className="text-secondary">Task Review</Modal.Title>
       </Modal.Header>
-      <Modal.Body className="pt-1">
-        <Card className="shadow-sm border-0" style={{ borderRadius: '12px' }}>
-          <Card.Body className="p-4">
-            <Form>
-              <Form.Group>
-                <Form.Label className="text-muted mb-3 text-uppercase">Template</Form.Label>
-                <Form.Select
-                  className="form-control"
-                  value={selectedTemplate}
-                  onChange={(e) => setSelectedTemplate(e.target.value)}
+      <Modal.Body className="p-4">
+        <Row className="g-4">
+          <Col md={6}>
+            <Card border="light" className="shadow-sm h-100">
+              <Card.Header className="bg-light py-2">
+                <h6 className="mb-0 text-muted">Task Overview</h6>
+              </Card.Header>
+              <Card.Body>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">Title:</span>
+                  <strong>{selectedTask?.title || 'N/A'}</strong>
+                </div>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">Category:</span>
+                  <strong>{selectedTask?.category || 'N/A'}</strong>
+                </div>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">Client:</span>
+                  <strong>{selectedTask?.client || 'N/A'}</strong>
+                </div>
+                <div className="d-flex justify-content-between">
+                  <span className="text-muted">Rate per Hour:</span>
+                  <strong>₹{selectedTask?.ratePerHour || 'N/A'}</strong>
+                </div>
+                <div className="d-flex justify-content-between mt-2">
+                  <span className="text-muted">Total Amount:</span>
+                  <strong className="text-success">
+                    ₹{(selectedTask?.ratePerHour * (selectedTask?.subtaskDetails?.minutes / 60)).toFixed(2) || 'N/A'}
+                  </strong>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+          <Col md={6}>
+            <Card border="light" className="shadow-sm h-100">
+              <Card.Header className="bg-light py-2">
+                <h6 className="mb-0 text-muted">Sub Task Details</h6>
+              </Card.Header>
+              <Card.Body>
+                <p className="text-muted fst-italic mb-0">
+                  {selectedTask?.details || 'No additional details available.'}
+                </p>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+
+        <Card border="light" className="shadow-sm mt-4">
+          <Card.Header className="bg-light py-2">
+            <h6 className="mb-0 text-muted">Review Information</h6>
+          </Card.Header>
+          <Card.Body>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="text-muted">Enter Amount</Form.Label>
+                  <Form.Control 
+                    type="number" 
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="Enter total amount"
+                    size="sm"
+                    min="0"
+                    step="0.01"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="text-muted">Rating</Form.Label>
+                  <div className="d-flex align-items-center">
+                    <div className="d-flex">
+                      {[...Array(10)].map((star, index) => {
+                        const ratingValue = index + 1;
+                        return (
+                          <span 
+                            key={index} 
+                            onClick={() => setRating(ratingValue)}
+                            style={{
+                              color: ratingValue <= rating ? '#ffd700' : '#e4e5e9',
+                              cursor: 'pointer',
+                              fontSize: '24px',
+                              marginRight: '5px'
+                            }}
+                          >
+                            ★
+                          </span>
+                        );
+                      })}
+                    </div>
+                    {rating > 0 && (
+                      <Badge bg="secondary" className="ms-2">
+                        {rating} / 10
+                      </Badge>
+                    )}
+                  </div>
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={12}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="text-muted">Remarks</Form.Label>
+                  <Form.Control 
+                    as="textarea" 
+                    rows={4} 
+                    value={remarks}
+                    onChange={(e) => setRemarks(e.target.value)}
+                    placeholder="Enter detailed remarks about task performance..."
+                    size="sm"
+                    className="mb-3"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={12}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="text-muted mb-2">Select Entity</Form.Label>
+                  <Form.Select 
+                    value={selectedEntity} 
+                    onChange={(e) => setSelectedEntity(e.target.value)}
+                    size="sm"
+                    className={`examples--dropdown ${!selectedEntity ? 'is-invalid' : ''}`}
+                    required
+                  >
+                    <option value="" disabled>Choose Entity</option>
+                    {entities.map(entity => (
+                      <option key={entity.id} value={entity.id}>
+                        {entity.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                  {!selectedEntity && (
+                    <Form.Control.Feedback type="invalid" className="d-block">
+                      Please select an entity
+                    </Form.Control.Feedback>
+                  )}
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row className="mt-3">
+              <Col md={12}>
+                <Form.Group className="mb-3">
+                  <Form.Label className="text-muted mb-2">
+                    Select Template
+                    <span className="text-danger ms-1">*</span>
+                  </Form.Label>
+                  <Form.Select 
+                    value={selectedTemplate} 
+                    onChange={(e) => setSelectedTemplate(e.target.value)}
+                    size="sm"
+                    className={`examples--dropdown ${!selectedTemplate ? 'is-invalid' : ''}`}
+                    required
+                  >
+                    <option value="" disabled>Choose Template</option>
+                    {templates.map(template => (
+                      <option key={template.id} value={template.id}>
+                        {template.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                  {!selectedTemplate && (
+                    <div className="invalid-feedback d-block">
+                      Please select a review template
+                    </div>
+                  )}
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row className="mt-3">
+              <Col md={12}>
+                <Button 
+                  variant="primary" 
+                  onClick={handleSubmitReview}
+                  className="w-100"
+                  disabled={!selectedTemplate || !selectedEntity || rating === 0}
                 >
-                  <option value="">Select a template...</option>
-                  {templates.map(template => (
-                    <option key={template.id} value={template.id}>
-                      {template.name}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Form>
+                  Submit Review
+                </Button>
+              </Col>
+            </Row>
           </Card.Body>
         </Card>
       </Modal.Body>
-      <Modal.Footer className="border-top-0">
+      <Modal.Footer className="border-top-0 pt-0">
         <Button 
-          variant="secondary" 
-          onClick={() => setShowTemplateModal(false)}
-          className="px-4"
+          variant="outline-secondary" 
+          onClick={() => setShowTaskModal(false)}
+          className="px-3"
         >
-          Close
-        </Button>
-        <Button 
-          variant="primary" 
-          onClick={() => {
-            // Handle send to client
-            setShowTemplateModal(false);
-            // Reset all states
-            setSelectedTask(null);
-            setRating(0);
-            setPrice('');
-            setRemarks('');
-            setSelectedEntity('');
-            setSelectedTemplate('');
-          }}
-          disabled={!selectedTemplate}
-          className="px-4"
-        >
-          Send to Client
+          Cancel
         </Button>
       </Modal.Footer>
     </Modal>
@@ -332,7 +687,7 @@ const PendingReviews = () => {
         HeaderText="Pending Reviews"
         Breadcrumb={[
           { name: 'Tasks', navigate: '/tasks' },
-          { name: 'Pending Reviews' }
+          { name: 'Pending Reviews', navigate: '/pending-reviews' }
         ]}
       />
       
@@ -350,70 +705,9 @@ const PendingReviews = () => {
         </Card.Body>
       </Card>
 
-      {/* Task Review Modal */}
-      <Modal show={showTaskModal} onHide={() => setShowTaskModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Review Task</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {selectedTask && (
-            <div>
-              <h5>Task Details</h5>
-              <p><strong>Task ID:</strong> {selectedTask.taskId}</p>
-              <p><strong>Title:</strong> {selectedTask.title}</p>
-              <p><strong>Details:</strong> {selectedTask.details}</p>
-              
-              <hr />
-              
-              <Form>
-                <Form.Group className="mb-3">
-                  <Form.Label>Rating (1-10)</Form.Label>
-                  <div>
-                    <Rating
-                      count={10}
-                      value={rating}
-                      onChange={setRating}
-                      size={24}
-                      activeColor="#ffd700"
-                    />
-                  </div>
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Price</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Remarks</Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={3}
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                  />
-                </Form.Group>
-              </Form>
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowTaskModal(false)}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleTaskModalSave}>
-            Save & Continue
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
+      {renderTaskModal()}
+      
       {renderEntityModal()}
-
-      {renderTemplateModal()}
     </div>
   );
 };

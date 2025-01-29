@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Table, Badge, Row, Col, Card, Form } from 'react-bootstrap';
+import { Button, Table, Badge, Row, Col, Card, Form, Alert, ProgressBar } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
 const CompletedTasks = () => {
   // State variables
   const [completedTasks, setCompletedTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
-  const [viewTaskModalOpen, setViewTaskModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [minMinutes, setMinMinutes] = useState('');
+  const [calculatedAmount, setCalculatedAmount] = useState(0);
+  const [isStatusChanged, setIsStatusChanged] = useState(false);
 
   // Fetch completed tasks (replace with actual API call)
   useEffect(() => {
@@ -18,6 +22,7 @@ const CompletedTasks = () => {
         const mockCompletedTasks = [
           {
             id: 1,
+            client:'Acme Corporation',
             taskId: 'TASK-001',
             title: 'Project Proposal Development',
             subtasks: [
@@ -29,7 +34,13 @@ const CompletedTasks = () => {
             status: 'completed',
             ratePerHour: 50,
             category: 'Development',
-            subcategory: 'Proposal'
+            subcategory: 'Proposal',
+            date: '01-05-2024',
+            rows: [
+              { title: 'Research', minutes: '60', percentage: 100, status: 'completed' },
+              { title: 'Draft', minutes: '120', percentage: 100, status: 'completed' },
+              { title: 'Review', minutes: '90', percentage: 100, status: 'completed' }
+            ]
           },
           // Add more mock completed tasks
         ];
@@ -71,193 +82,287 @@ const CompletedTasks = () => {
     return { totalMinutes: adjustedMinutes, totalAmount };
   };
 
-  // Open task details modal
-  const handleViewDetails = (task, specificSubtask) => {
-    // Ensure specificSubtask exists and has required properties
-    const safeSubtask = specificSubtask || { 
-      title: 'N/A', 
-      status: 'N/A', 
-      minutes: 0 
-    };
-
-    setSelectedTask({
-      ...task,
-      subtaskDetails: safeSubtask,
-      ratePerHour: task.ratePerHour || 50, // Default rate if not provided
-      rows: task.subtasks || [], // For cost calculation
-      category: task.category || 'N/A',
-      subcategory: task.subcategory || 'N/A'
-    });
-    setViewTaskModalOpen(true);
+  // Calculate Total Minutes
+  const calculateTotalMinutes = (rows) => {
+    if (!rows || !Array.isArray(rows)) return 0;
+    return rows.reduce((sum, row) => sum + Number(row.minutes), 0);
   };
 
-  // Render task details modal
-  const renderTaskDetailsModal = () => {
-    if (!selectedTask) return null;
+  // Calculate Total Hours
+  const calculateTotalHours = (rows) => {
+    const totalMinutes = calculateTotalMinutes(rows);
+    const hours = Math.floor(totalMinutes / 60);
+    const remainingMinutes = totalMinutes % 60;
+    return `${hours}h ${remainingMinutes}m`;
+  };
 
-    // Ensure all required properties exist
-    const safeTask = {
-      taskId: selectedTask.taskId || 'N/A',
-      title: selectedTask.title || 'N/A',
-      subtaskDetails: selectedTask.subtaskDetails || { 
-        title: 'N/A', 
-        status: 'N/A', 
-        minutes: 0 
-      },
-      ratePerHour: selectedTask.ratePerHour || 50,
-      rows: selectedTask.rows || [],
-      category: selectedTask.category || 'N/A',
-      subcategory: selectedTask.subcategory || 'N/A'
+  // Modal styles
+  const modalStyles = `
+    .task-modal-container {
+      position: fixed;
+      top: 0;
+      right: -500px;
+      width: 60vw;
+      height: 100vh;
+      background-color: white;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+      transition: right 0.3s ease-in-out;
+      z-index: 1050;
+      overflow-y: auto;
+      padding: 0px;
+    }
+    .task-modal-container.open {
+      right: 0;
+    }
+    .task-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 1040;
+      display: none;
+    }
+    .task-modal-overlay.open {
+      display: block;
+    }
+    /* New CSS to reduce task ID input box size */
+    .task-id-input {
+      max-width: 120px;
+      padding: 5px;
+      font-size: 0.9em;
+    }
+  `;
+
+  // Custom Modal Component
+  const TaskDetailsModal = ({ 
+    show, 
+    onHide, 
+    task 
+  }) => {
+    // Ensure task and rows exist
+    if (!task) return null;
+
+    // Fallback for rows
+    const taskRows = task.rows || task.subtasks || [
+      {
+        title: task.title || 'N/A', 
+        percentage: task.completionPercentage || 0,
+        minutes: task.minutes || 0,
+        status: task.status || 'Not Set'
+      }
+    ];
+
+    // Calculate overall task progress
+    const calculateOverallProgress = () => {
+      // If the task is completed, always return 100
+      if (task.status?.toLowerCase() === 'completed') return 100;
+
+      // If no rows/subtasks, return 0
+      if (!taskRows.length) return 0;
+
+      // Otherwise, calculate progress as before
+      return taskRows.reduce((sum, r) => sum + (r.percentage || 0), 0) / taskRows.length;
     };
 
-    const realTimeCost = calculateRealTimeCost(
-      safeTask.rows, 
-      Number(safeTask.ratePerHour)
-    );
-
     return (
-      <Modal 
-        show={viewTaskModalOpen} 
-        onHide={() => {
-          setViewTaskModalOpen(false);
-        }}
-        size="xl"
-        centered
-        dialogClassName="custom-modal-style"
+      <div 
+        className={`task-modal-overlay ${show ? 'open' : ''}`} 
+        onClick={onHide}
       >
-        <Modal.Header 
-          closeButton 
-          className="border-bottom-0 pb-0 position-relative"
-          closeVariant="dark"
-          style={{ zIndex: 1000 }}
+        <div 
+          className={`task-modal-container ${show ? 'open' : ''}`} 
+          onClick={(e) => e.stopPropagation()}
         >
-          <Modal.Title className="w-100">
-            <div className="d-flex justify-content-between align-items-center w-100">
-              <h4 className="mb-0 text-primary fw-bold">Task and Subtask Details</h4>
-              <div className="d-flex align-items-center">
-                <span 
-                  className={`badge rounded-pill text-uppercase fw-bold px-3 py-2 me-2 ${
-                    safeTask?.subtaskDetails?.status?.toLowerCase() === 'completed' ? 'bg-success' :
-                    safeTask?.subtaskDetails?.status?.toLowerCase() === 'in progress' ? 'bg-warning' :
-                    'bg-secondary'
-                  }`}
-                  style={{
-                    fontSize: '0.75rem',
-                    letterSpacing: '0.05em',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                  }}
-                >
-                  {safeTask?.subtaskDetails?.status || 'N/A'}
-                </span>
+          <div className="modal-header d-flex justify-content-between align-items-center">
+            <h5 className="modal-title ubuntu-font ubuntu-bold">View Task</h5>
+            <button
+              type="button"
+              className="close"
+              onClick={onHide}
+            >
+              &times;
+            </button>
+          </div>
+
+          <div className="modal-body ubuntu-font ubuntu-regular">
+            {/* Task Details */}
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label>Task ID</label>
+                <input
+                  type="text"
+                  className="form-control task-id-input"
+                  value={task.taskId || 'N/A'}
+                  readOnly
+                />
+              </div>
+              <div className="col-md-6">
+                <label>Client</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={task.client || 'N/A'}
+                  readOnly
+                />
               </div>
             </div>
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="pt-1">
-          <Row>
-            <Col md={8}>
-              <Card className="shadow-sm border-0" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-                <Card.Body className="p-4">
-                  <Row>
-                    <Col md={6}>
-                      <h6 className="text-muted mb-3 text-uppercase">Task Information</h6>
-                      <div className="mb-3 bg-light p-3 rounded">
-                        <div className="mb-2 d-flex justify-content-between">
-                          <small className="text-muted">Task ID</small>
-                          <strong>{safeTask.taskId}</strong>
-                        </div>
-                        <div className="mb-2 d-flex justify-content-between">
-                          <small className="text-muted">Original Task</small>
-                          <strong>{safeTask.title}</strong>
-                        </div>
-                        <div className="d-flex justify-content-between">
-                          <small className="text-muted">Subtask Title</small>
-                          <strong>{safeTask.subtaskDetails.title}</strong>
-                        </div>
-                      </div>
-                    </Col>
-                    <Col md={6}>
-                      <h6 className="text-muted mb-3 text-uppercase">Subtask Details</h6>
-                      <div className="bg-light p-3 rounded">
-                        <div className="mb-2 d-flex justify-content-between">
-                          <small className="text-muted">Minutes</small>
-                          <strong>{safeTask.subtaskDetails.minutes}</strong>
-                        </div>
-                        <div className="mb-2 d-flex justify-content-between">
-                          <small className="text-muted">Category</small>
-                          <strong>{safeTask.category} - {safeTask.subcategory}</strong>
-                        </div>
-                        <div className="d-flex justify-content-between">
-                          <small className="text-muted">Rate per Hour</small>
-                          <strong>₹{safeTask.ratePerHour}</strong>
-                        </div>
-                      </div>
-                    </Col>
-                  </Row>
 
-                  <hr className="my-4 border-dashed" />
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label>Task Category</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={task.category || 'N/A'}
+                  readOnly
+                />
+              </div>
+              <div className="col-md-6">
+                <label>Subcategory</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={task.subcategory || 'N/A'}
+                  readOnly
+                />
+              </div>
+            </div>
 
-                  <h6 className="text-muted mb-3 text-uppercase">Amount Calculation</h6>
-                  <Row>
-                    <Col md={6}>
-                      <Form.Group>
-                        <Form.Label className="text-muted">Total Minutes</Form.Label>
-                        <Form.Control 
-                          type="text" 
-                          value={realTimeCost.totalMinutes} 
-                          readOnly 
-                        />
-                      </Form.Group>
-                    </Col>
-                    <Col md={6}>
-                      <Form.Group>
-                        <Form.Label className="text-muted">Calculated Amount</Form.Label>
-                        <Form.Control 
-                          type="text" 
-                          value={`₹${realTimeCost.totalAmount.toFixed(2)}`} 
-                          readOnly 
-                        />
-                      </Form.Group>
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
-            </Col>
-            
-            {/* Status Section */}
-            <Col md={4}>
-              <Card className="shadow-sm border-0" style={{ borderRadius: '12px', overflow: 'hidden' }}>
-                <Card.Body className="p-4">
-                  <h6 className="text-muted mb-3 text-uppercase">Task Status</h6>
-                  <Form>
-                    <Form.Group className="mb-3">
-                      <Form.Label>Current Status</Form.Label>
-                      <Form.Control 
-                        type="text" 
-                        value={safeTask?.subtaskDetails?.status || 'N/A'} 
-                        readOnly 
-                        className={`${
-                          safeTask?.subtaskDetails?.status?.toLowerCase() === 'completed' 
-                            ? 'bg-success text-white' 
-                            : 'bg-secondary text-white'
-                        }`}
-                      />
-                    </Form.Group>
-                  </Form>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => {
-            setViewTaskModalOpen(false);
-          }}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+            {/* Task Rows */}
+            <div className="table-responsive">
+              <table className="table table-bordered text-center">
+                <thead>
+                  <tr>
+                    
+                    <th>Title</th>
+                    <th>Subtask</th>
+                    
+                    <th>Minutes</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    
+                    <td>{task.title || 'N/A'}</td>
+                    <td>{task.currentSubtask?.title || 'N/A'}</td>
+                    
+                    <td>{task.subtaskMinutes || 0}</td>
+                    <td>
+                      <Badge
+                        bg={task.status?.toLowerCase() === 'completed' ? 'success' : 'secondary'}
+                        className="px-2 py-1"
+                      >
+                        {task.status || 'N/A'}
+                      </Badge>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Task Status Progress Bar */}
+            <div className="row mb-3">
+              <div className="col-md-12">
+                <label>Task Progress</label>
+                <ProgressBar 
+                  now={calculateOverallProgress()} 
+                  label={`${calculateOverallProgress().toFixed(0)}%`} 
+                  animated 
+                  variant={
+                    !task.rows || task.rows.length === 0 ? 'danger' : 
+                    task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length === 0 ? 'danger' : 
+                    task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length < 99 ? 'warning' : 
+                    'success'
+                  } 
+                  labelProps={{ style: { color: 'black', fontWeight: 'bold' } }}
+                />
+              </div>
+            </div>
+
+            {/* Calculations Section */}
+            <div className="row mb-3 justify-content-center">
+              <div className="col-md-3 text-center" style={{maxWidth: '150px'}}>
+                <label>Total Minutes</label>
+                <input
+                  type="text"
+                  className="form-control text-center"
+                  value={calculateTotalMinutes(taskRows)}
+                  readOnly
+                />
+              </div>
+              <div className="col-md-3 text-center" style={{maxWidth: '150px'}}>
+                <label>Total Hours</label>
+                <input
+                  type="text"
+                  className="form-control text-center"
+                  value={(calculateTotalMinutes(taskRows) / 60).toFixed(2)}
+                  readOnly
+                />
+              </div>
+              <div className="col-md-3 text-center" style={{maxWidth: '150px'}}>
+                <label>Rate per Hour</label>
+                <input
+                  type="text"
+                  className="form-control text-center"
+                  value={task.ratePerHour || '0'}
+                  readOnly
+                />
+              </div>
+              <div className="col-md-3 text-center" style={{maxWidth: '150px'}}>
+                <label>Total Cost</label>
+                <input
+                  type="text"
+                  className="form-control text-center"
+                  value={
+                    task.ratePerHour && task.totalMinutes 
+                      ? `₹${((task.ratePerHour * task.totalMinutes) / 60).toFixed(2)}` 
+                      : '₹0.00'
+                  }
+                  readOnly
+                />
+              </div>
+            </div>
+
+          
+
+      
+          </div>
+
+          <div className="modal-footer">
+            <button
+              type="button"
+              className="btn btn-secondary mr-2"
+              style={{
+                borderRadius: '20px',
+                padding: '0.25rem 0.75rem',
+                textTransform: 'uppercase',
+                fontWeight: '600',
+                letterSpacing: '0.5px',
+                border: '2px solid',
+                transition: 'all 0.3s ease'
+              }}
+              onClick={onHide}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
     );
+  };
+
+  // Open task details modal
+  const handleViewDetails = (task, subtask) => {
+    console.log('Selected Task:', task);
+    console.log('Selected Subtask:', subtask);
+    setSelectedTask({
+      ...task,
+      currentSubtask: subtask
+    });
+    setIsModalOpen(true);
   };
 
   return (
@@ -278,45 +383,62 @@ const CompletedTasks = () => {
             <div className="card">
               <div className="body">
                 <div className="table-responsive">
-                  <Table striped hover>
-                    <thead>
+                  <table className="table table-hover m-b-0">
+                    <thead className="thead-dark">
                       <tr>
+                        <th>Date</th>
                         <th>Task ID</th>
                         <th>Title</th>
-                        <th>Subtask</th>
-                        <th>Status</th>
+                        <th>Client</th>
+                        <th>Category</th>
                         <th>Minutes</th>
-                        <th>Actions</th>
+                        <th>Status</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {completedTasks.map((task, index) => (
-                        <tr key={index}>
-                          <td>{task.taskId || 'N/A'}</td>
-                          <td>{task.title || 'N/A'}</td>
-                          <td>{task.currentSubtask?.title || 'N/A'}</td>
+                      {completedTasks.map((task) => (
+                        <tr key={task.taskId}>
+                          <td>{task.date || new Date().toLocaleDateString('en-GB')}</td>
+                          <td>{task.taskId}</td>
+                          <td>{task.title}</td>
+                          <td>{task.client || 'N/A'}</td>
+                          <td>{task.category || 'N/A'}</td>
                           <td>
-                            <Badge
-                              bg={task.status?.toLowerCase() === 'completed' ? 'success' : 'secondary'}
-                              className="px-2 py-1"
-                            >
-                              {task.status || 'N/A'}
-                            </Badge>
+                            {calculateTotalMinutes(task.rows)} mins
                           </td>
-                          <td>{task.subtaskMinutes || 0}</td>
                           <td>
-                            <Button 
-                              variant="info" 
-                              size="sm" 
-                              onClick={() => handleViewDetails(task, task.currentSubtask)}
+                            <div style={{ width: '100%' }}>
+                              <ProgressBar 
+                                now={task.rows && task.rows.length > 0 ? task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length : 0} 
+                                label={`${(task.rows && task.rows.length > 0 ? task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length : 0).toFixed(0)}%`} 
+                                animated 
+                                variant={
+                                  !task.rows || task.rows.length === 0 ? 'danger' : 
+                                  task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length === 0 ? 'danger' : 
+                                  task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length < 99 ? 'warning' : 
+                                  'success'
+                                } 
+                                labelProps={{ style: { color: 'black', fontWeight: 'bold' } }}
+                              />
+                            </div>
+                          </td>
+                          <td>
+                            <Link 
+                              to="#" 
+                              className="btn btn-outline-info mr-1" 
+                              onClick={() => {
+                                setSelectedTask(task);
+                                setIsModalOpen(true);
+                              }}
                             >
-                              View Details
-                            </Button>
+                              <i className="icon-eye"></i>
+                            </Link>
                           </td>
                         </tr>
                       ))}
                     </tbody>
-                  </Table>
+                  </table>
                 </div>
               </div>
             </div>
@@ -326,7 +448,13 @@ const CompletedTasks = () => {
         <div className="text-center">No completed tasks found</div>
       )}
 
-      {renderTaskDetailsModal()}
+      {isModalOpen && selectedTask && (
+        <TaskDetailsModal 
+          show={isModalOpen} 
+          onHide={() => setIsModalOpen(false)} 
+          task={selectedTask} 
+        />
+      )}
     </div>
   );
 };

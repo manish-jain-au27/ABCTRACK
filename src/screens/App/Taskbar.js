@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import PageHeader from "../../components/PageHeader";
-import DataTable from "react-data-table-component";
 import { DateRangePicker } from 'react-date-range';
 import 'react-date-range/dist/styles.css'; // main css file
 import 'react-date-range/dist/theme/default.css'; // theme css
 import { enUS } from 'date-fns/locale';
 import { addDays } from 'date-fns';
+import Select from "react-dropdown-select";
+import { ProgressBar } from "react-bootstrap"; // Import ProgressBar from react-bootstrap
 
 // Constants
 const TASK_CATEGORIES = [
@@ -74,16 +75,31 @@ const AppTaskbar = () => {
   const [viewTaskModalOpen, setViewTaskModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
 
+  const [selectedClients, setSelectedClients] = useState([]);
+
+  const clientOptions = [
+    { label: "Client 1", value: "client1" },
+    { label: "Client 2", value: "client2" },
+    { label: "Client 3", value: "client3" },
+    // Add more client options as needed
+  ];
+
+  const handleClientChange = (values) => {
+    setSelectedClients(values);
+    // Add any additional logic for client selection
+  };
+
   const data = [
     {
       index: "1",
       taskId: "TASK-001",
+      date: new Date().toLocaleDateString('en-GB'), // DD/MM/YYYY format
       title: "Design",
       status: "Created",
       rows: [
         {
           title: "Design",
-          minutes: "15",
+          minutes: "55",
           percentage: 20
         },
         {
@@ -102,6 +118,7 @@ const AppTaskbar = () => {
     {
       index: "2",
       taskId: "TASK-002",
+      date: new Date().toLocaleDateString('en-GB'), // DD/MM/YYYY format
       title: "Develop",
       status: "In Progress",
       rows: [
@@ -125,17 +142,23 @@ const AppTaskbar = () => {
     },
   ];
 
-  // Toggle function for task duration section
+  // New state for template
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [templateOptions, setTemplateOptions] = useState([
+    { value: 'template1', label: 'Template 1' },
+    { value: 'template2', label: 'Template 2' },
+    { value: 'template3', label: 'Template 3' },
+  ]);
+
   const toggleTaskDuration = () => {
     setIsTaskDurationOpen(!isTaskDurationOpen);
   };
 
-  // Utility function to generate unique ID
   const generateUniqueId = () => {
     return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
-  // Generate unique task ID
+ 
   const generateTaskId = () => {
     const lastTaskId = localStorage.getItem('lastTaskId');
     const newTaskId = lastTaskId ? parseInt(lastTaskId) + 1 : 1;
@@ -211,35 +234,43 @@ const AppTaskbar = () => {
 
   // Calculate Total Hours
   const calculateTotalHours = () => {
-    const totalMinutes = calculateTotalMinutes();
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-
-    const formattedMinutes = minutes.toString().padStart(2, '0');
-
-    return `${hours}:${formattedMinutes}`;
+    return calculateTotalMinutes();
   };
 
   // Calculate real-time cost
   const calculateRealTimeCost = (rows = taskRows, rate = ratePerHour) => {
-    const totalMinutes = rows.reduce((sum, row) => {
-      const minutes = Number(row.minutes) || 0;
-      return sum + minutes;
+    // Calculate total minutes
+    const totalMinutes = rows.reduce((sum, row) => sum + Number(row.minutes), 0);
+    const totalHoursDecimal = totalMinutes / 60;
+
+    // Calculate total cost based on payment type
+    let totalCost = 0;
+    let lumpsumTotal = 0;
+    let perMinuteTotal = 0;
+
+    // Calculate lumpsum total (sum of rates)
+    lumpsumTotal = rows.reduce((sum, row) => {
+      const rowRate = parseFloat(row.rate) || 0;
+      return sum + rowRate;
     }, 0);
 
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    const formattedHours = `${hours}:${minutes.toString().padStart(2, '0')}`;
+    // Calculate per-minute total
+    perMinuteTotal = totalHoursDecimal * rate;
 
-    const totalHoursDecimal = Number(formattedHours.replace(':', '.'));
-
-    const totalCost = totalHoursDecimal * rate;
+    // Set total cost based on payment type
+    if (paymentType === 'lumpsum') {
+      totalCost = lumpsumTotal;
+    } else {
+      totalCost = perMinuteTotal;
+    }
 
     return {
       totalMinutes,
       totalHoursDecimal,
       totalCost,
-      formattedHours
+      lumpsumTotal,
+      perMinuteTotal,
+      formattedHours: `${Math.floor(totalHoursDecimal)}:${String(Math.round((totalHoursDecimal % 1) * 60)).padStart(2, '0')}`
     };
   };
 
@@ -273,7 +304,7 @@ const AppTaskbar = () => {
       rows: taskRows,
       rowTitles: taskRows.map(row => row.title).filter(title => title.trim() !== ''),
       title: taskRows[0]?.title || 'Untitled Task',
-      totalHours: calculateTotalHours(),
+      totalHours: calculateTotalMinutes(),
       ratePerHour: ratePerHour,
       totalCost: realTimeCost.totalCost,
       status: 'created'
@@ -304,14 +335,9 @@ const AppTaskbar = () => {
     }
   }, []);
 
-  // Update localStorage whenever tasks change
-  // useEffect(() => {
-  //   localStorage.setItem('tasks', JSON.stringify(tasks));
-  // }, [tasks]);
-
-  // Task Management Functions
-  const viewTask = (task) => {
-    setSelectedTask(task);
+ 
+  const viewTask = (row) => {
+    setSelectedTask(row);
     setViewTaskModalOpen(true);
   };
 
@@ -415,7 +441,7 @@ const AppTaskbar = () => {
         padding: '10px',
         textAlign: 'center',
         fontSize: '15px',
-        textTransform: 'uppercase',
+        textTransform: 'uppercase'
       },
     },
     cells: {
@@ -423,6 +449,7 @@ const AppTaskbar = () => {
         border: '1px solid #ddd',
         borderCollapse: 'collapse',
         padding: '10px',
+        textAlign: 'center'
       },
     },
   };
@@ -433,28 +460,56 @@ const AppTaskbar = () => {
       selector: (row) => row.taskId,
       sortable: true,
       wrap: true,
-      width: "10%",
+      width: '10%',
+      minWidth: '100px',
+      maxWidth: '150px',
+      center: true,
+      headerStyle: () => ({
+        textAlign: 'center',
+        justifyContent: 'center'
+      })
     },
     {
       name: "Title",
       selector: (row) => row.title,
       sortable: true,
       wrap: true,
-      width: "20%",
+      width: '20%',
+      minWidth: '150px',
+      maxWidth: '250px',
+      center: true,
+      headerStyle: () => ({
+        textAlign: 'center',
+        justifyContent: 'center'
+      })
     },
     {
       name: "Client",
       selector: (row) => row.client,
       sortable: true,
       wrap: true,
-      width: "15%",
+      width: '15%',
+      minWidth: '120px',
+      maxWidth: '180px',
+      center: true,
+      headerStyle: () => ({
+        textAlign: 'center',
+        justifyContent: 'center'
+      })
     },
     {
       name: "Category",
       selector: (row) => row.category,
       sortable: true,
       wrap: true,
-      width: "15%",
+      width: '15%',
+      minWidth: '120px',
+      maxWidth: '180px',
+      center: true,
+      headerStyle: () => ({
+        textAlign: 'center',
+        justifyContent: 'center'
+      })
     },
     {
       name: "Status",
@@ -466,25 +521,28 @@ const AppTaskbar = () => {
 
         // Determine status and color based on percentage
         const getStatusAndColor = (percentage) => {
-          if (percentage === 0) return { status: 'Pending', color: 'bg-danger' }; // Red for Pending
-          if (percentage > 0 && percentage < 100) return { status: 'In Progress', color: 'bg-warning' }; // Orange for In Progress
-          if (percentage === 100) return { status: 'Completed', color: 'bg-success' }; // Green for Completed
+          if (percentage === 0) return { status: 'Pending', color: 'bg-danger text-white border border-black' }; // Red for Pending
+          if (percentage > 0 && percentage < 100) return { status: 'In Progress', color: 'bg-warning text-white border border-black' }; // Orange for In Progress
+          if (percentage === 100) return { status: 'Completed', color: 'bg-success text-white border border-black' }; // Green for Completed
           return { status: 'Unknown', color: 'bg-danger' };
         };
 
         const { status, color } = getStatusAndColor(averagePercentage);
 
         return (
-          <div className="d-flex justify-content-center">
+          <div className="d-flex justify-content-center w-100 text-center">
             <span 
-              className={`badge ${color}`}
-              style={{ 
-                fontSize: '10px', 
-                padding: '0.3em', 
-                marginBottom: '0.3em',
-                fontWeight: 'bold',
-                textAlign: 'center',
-                width: '100%'
+              className={`badge rounded-pill text-uppercase fw-bold ${color}`}
+              style={{
+                fontSize: '0.55rem',
+                letterSpacing: '0.05em',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                maxWidth: '90%',
+                width: 'auto',
+                padding: '0.2rem 0.5rem',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                border: `1px solid currentColor`
               }}
             >
               {status}
@@ -493,38 +551,84 @@ const AppTaskbar = () => {
         );
       },
       sortable: true,
-      width: "10%",
+      width: '10%',
+      minWidth: '100px',
+      maxWidth: '150px',
+      center: true,
+      headerStyle: () => ({
+        textAlign: 'center',
+        justifyContent: 'center'
+      })
     },
     {
-      name: "Hours",
-      selector: (row) => row.totalHours,
+      name: "Minutes",
+      selector: (row) => {
+        const totalMinutes = row.rows 
+          ? row.rows.reduce((sum, r) => sum + Number(r.minutes), 0) 
+          : 0;
+        return totalMinutes;
+      },
       sortable: true,
       wrap: true,
-      width: "10%",
+      width: '10%',
+      minWidth: '80px',
+      maxWidth: '120px',
+      center: true,
+      headerStyle: () => ({
+        textAlign: 'center',
+        justifyContent: 'center'
+      })
     },
     {
       name: "Cost",
       selector: (row) => row.totalCost,
       sortable: true,
       wrap: true,
-      width: "8%",
+      width: '8%',
+      minWidth: '80px',
+      maxWidth: '120px',
+      center: true,
+      headerStyle: () => ({
+        textAlign: 'center',
+        justifyContent: 'center'
+      })
     },
     {
-      name: "Actions",
-      selector: (row) => (
-        <button
-          className="btn btn-sm btn-info"
-          onClick={() => viewTask(row)}
-        >
-          View
-        </button>
+      name: "Action",
+      cell: (row) => (
+        <div className="d-flex justify-content-center w-100">
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-info"
+            style={{
+              borderRadius: '20px', // Rounded pill shape
+              padding: '0.25rem 0.75rem',
+              textTransform: 'uppercase',
+              fontWeight: '600',
+              letterSpacing: '0.5px',
+              border: '2px solid',
+              transition: 'all 0.3s ease'
+            }}
+            onClick={() => {
+              setSelectedTask(row);
+              setViewTaskModalOpen(true);
+            }}
+          >
+            View
+          </button>
+        </div>
       ),
-      sortable: true,
-      wrap: true,
+      sortable: false,
+      width: '10%',
+      minWidth: '100px',
+      maxWidth: '150px',
       center: true,
-      width: "10%"
-    },
-  ]
+      headerStyle: () => ({
+        textAlign: 'center',
+        justifyContent: 'center'
+      })
+    }
+  ];
 
   const [rows, setRows] = useState(data);
 
@@ -617,12 +721,21 @@ const AppTaskbar = () => {
 
   // Add handler for date range change
   const handleDateRangeChange = (ranges) => {
+    const { startDate, endDate } = ranges.selection;
+    
+    // Update date range state
     setDateRange(ranges.selection);
-    setTaskHeader(prev => ({
-      ...prev,
-      startDate: ranges.selection.startDate,
-      endDate: ranges.selection.endDate
-    }));
+    
+    // Only close and update when both start and end dates are selected
+    if (startDate && endDate && startDate !== endDate) {
+      setShowDateRangePicker(false);
+      setIsTaskDurationOpen(false);
+      setTaskHeader(prev => ({
+        ...prev,
+        startDate: startDate,
+        endDate: endDate
+      }));
+    }
   };
 
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
@@ -672,47 +785,18 @@ const AppTaskbar = () => {
     };
   }, []);
 
-  const ProgressBar = ({ percentage }) => {
-    // Determine color based on percentage
-    const getProgressColor = (percent) => {
-      if (percent === 0) return { barColor: 'bg-danger', textColor: 'text-danger' }; // Red for Pending
-      if (percent > 0 && percent < 100) return { barColor: 'bg-warning', textColor: 'text-warning' }; // Orange for In Progress
-      return { barColor: 'bg-success', textColor: 'text-success' }; // Green for Completed
-    };
-
-    const { barColor, textColor } = getProgressColor(percentage);
-
-    return (
-      <div className="progress" style={{ height: '10px', width: '80%', position: 'relative' }}>
-        <div 
-          className={`progress-bar ${barColor}`} 
-          role="progressbar" 
-          style={{ width: `${percentage}%` }} 
-          aria-valuenow={percentage} 
-          aria-valuemin="0" 
-          aria-valuemax="100"
-        >
-        </div>
-        <div 
-          style={{ 
-            position: 'absolute', 
-            top: '50%', 
-            left: '50%', 
-            transform: 'translate(-50%, -50%)', 
-            color: 'black', 
-            fontWeight: 'bold',
-            fontSize: '8px'
-          }}
-        >
-          {percentage}%
-        </div>
-      </div>
-    );
-  };
-
   // Add state for payment type and rate
   const [paymentType, setPaymentType] = useState('');
   const [paymentRate, setPaymentRate] = useState('');
+
+  const addNewTaskRow = () => {
+    const newRow = {
+      title: '',
+      minutes: '0',
+      percentage: 0
+    };
+    addTaskRow(newRow);
+  };
 
   return (
     <div style={{ flex: 1 }}>
@@ -725,7 +809,8 @@ const AppTaskbar = () => {
             />
             <div className="row">
               {/* Create Task Button */}
-              <div className="form-group col-lg-12" style={{ textAlign: 'left', marginTop: '15px' }}>
+              <div className="form-group col-lg-12" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
+                <span style={{ fontWeight: '600', color: '#6c757d' }}>Create Task</span>
                 <button
                   className="btn theme-bg-primary rounded-pill"
                   onClick={openCreateTaskModal}
@@ -769,6 +854,15 @@ const AppTaskbar = () => {
                             <button
                               type="button"
                               className="btn btn-sm btn-outline-secondary"
+                              style={{
+                                borderRadius: '20px', // Rounded pill shape
+                                padding: '0.25rem 0.75rem',
+                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                                letterSpacing: '0.5px',
+                                border: '2px solid',
+                                transition: 'all 0.3s ease'
+                              }}
                               onClick={() => viewTask(task)}
                             >
                               View
@@ -797,6 +891,15 @@ const AppTaskbar = () => {
                             <button
                               type="button"
                               className="btn btn-sm btn-outline-secondary"
+                              style={{
+                                borderRadius: '20px', // Rounded pill shape
+                                padding: '0.25rem 0.75rem',
+                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                                letterSpacing: '0.5px',
+                                border: '2px solid',
+                                transition: 'all 0.3s ease'
+                              }}
                               onClick={() => viewTask(task)}
                             >
                               View
@@ -825,6 +928,15 @@ const AppTaskbar = () => {
                             <button
                               type="button"
                               className="btn btn-sm btn-outline-secondary"
+                              style={{
+                                borderRadius: '20px', // Rounded pill shape
+                                padding: '0.25rem 0.75rem',
+                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                                letterSpacing: '0.5px',
+                                border: '2px solid',
+                                transition: 'all 0.3s ease'
+                              }}
                               onClick={() => viewTask(task)}
                             >
                               View
@@ -839,675 +951,796 @@ const AppTaskbar = () => {
             </div>
 
             {/* Tasks Table */}
-            <div className="card mt-3">
-              <div className="header">
-                <h2>All Tasks</h2>
-              </div>
-              <div className="body">
-                {/* <table className="table table-bordered table-striped">
-                  <thead>
-                    <tr>
-                      <th>Sr. No</th>
-                      <th>Task ID</th>
-                      <th>Title</th>
-
-                      <th>Status</th>
-                      <th>Hours</th>
-                      <th>Cost</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tasks.map((task, index) => {
-                      const totalHoursDecimal = convertHoursToDecimal(task.totalHours);
-
-                      const totalCost = totalHoursDecimal * (task.ratePerHour || 0);
-
-                      return (
-                        <tr key={index}>
-                          <td>{index + 1}</td>
-                          <td>{task.taskId}</td>
-                          <td>{task.title}</td>
-
-                          <td>{task.status}</td>
-                          <td>{task.totalHours || 'N/A'}</td>
-                          <td>${totalCost.toFixed(2)}</td>
-                          <td>
-                            <button
-                              className="btn btn-sm btn-info"
-                              onClick={() => viewTask(task)}
-                            >
-                              View
-                            </button>
-                          </td>
+            <div className="col-lg-12">
+              <div className="card product_item_list product-order-list">
+                <div className="header">
+                  <h2>Task List</h2>
+                </div>
+                <div className="body">
+                  <form className="ng-untouched ng-dirty ng-invalid mb-3">
+                    <div className="row d-flex justify-content-between">
+                      <div className="form-group col-lg-3">
+                        <label>Search</label>
+                        <input
+                          className={`form-control`}
+                          name="search"
+                          onChange={handleSearch}
+                          placeholder="Search tasks..."
+                        />
+                      </div>
+                    </div>
+                  </form>
+                  <div className="table-responsive">
+                    <table className="table table-hover m-b-0">
+                      <thead className="thead-dark">
+                        <tr>
+                          <th style={{ width: '50px' }}>Date</th>
+                          <th>Task ID</th>
+                          <th>Title</th>
+                          <th>Client</th>
+                          <th>Category</th>
+                          <th style={{ width: '100px' }}>Minutes</th>
+                          <th>Status</th>
+                          <th>Action</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colSpan="5" className="text-right"><strong>Total</strong></td>
-                      <td>{calculateTotalTaskHours()}</td>
-                      <td>${calculateTotalCost().toFixed(2)}</td>
-                      <td></td>
-                    </tr>
-                  </tfoot>
-                </table> */}
-                <form className="ng-untouched ng-dirty ng-invalid">
-                  <div className="row d-flex justify-content-between">
-                    <div className="form-group col-lg-3">
-                      <label>Search</label>
+                      </thead>
+                      <tbody>
+                        {rows.map((task) => (
+                          <tr key={task.taskId}>
+                            <td style={{ width: '50px' }}>{task.date || new Date().toLocaleDateString('en-GB')}</td>
+                            <td>{task.taskId}</td>
+                            <td>{task.title}</td>
+                            <td>{task.client}</td>
+                            <td>{task.category}</td>
+                            <td style={{ width: '100px' }}>
+                              {task.rows 
+                                ? task.rows.reduce((sum, r) => sum + Number(r.minutes), 0) 
+                                : 0} mins
+                            </td>
+                            <td>
+                              {/* Color-coded status display */}
+                              <div style={{ width: '100%' }}>
+                                <ProgressBar 
+                                  now={task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length} 
+                                  label={`${(task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length).toFixed(0)}%`} 
+                                  animated 
+                                  variant={
+                                    task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length === 0 ? 'danger' : 
+                                    task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length < 99 ? 'warning' : 
+                                    'success'
+                                  } 
+                                  labelProps={{ style: { color: 'black', fontWeight: 'bold' } }}
+                                  style={{ marginTop: '10px' }}
+                                />
+                              </div>
+                            </td>
+                            <td>
+                              <Link 
+                                to="#" 
+                                className="btn btn-outline-info mr-1" 
+                                onClick={() => {
+                                  setSelectedTask(task);
+                                  setViewTaskModalOpen(true);
+                                }}
+                              >
+                                <i className="icon-eye"></i>
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Create Task Sliding Panel */}
+            {isCreateTaskModalOpen && (
+              <div className={`task-modal-overlay ${isCreateTaskModalOpen ? 'open' : ''}`} onClick={() => setIsCreateTaskModalOpen(false)}>
+                <div className={`task-modal-container ${isCreateTaskModalOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header d-flex justify-content-between align-items-center">
+                    <h5 className="modal-title ubuntu-font ubuntu-bold">Create New Assignment</h5>
+                    <div className="d-flex align-items-center justify-content-end">
                       <input
-                        className={`form-control`}
-                        name="search"
-                        onChange={handleSearch}
+                        type="text"
+                        className="form-control task-id-input text-center"
+                        value={taskHeader.taskId}
+                        readOnly
+                        style={{ width: '150px' }}
                       />
                     </div>
                   </div>
-                </form>
-                <DataTable
-                  data={rows}
-                  columns={columns}
-                  customStyles={customStyles}
-                  pagination
-                  // highlightOnHover
-                  fixedHeaderScrollHeight="800px"
-                ></DataTable>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Create Task Sliding Panel */}
-      {isCreateTaskModalOpen && (
-        <div className={`task-modal-overlay ${isCreateTaskModalOpen ? 'open' : ''}`} onClick={() => setIsCreateTaskModalOpen(false)}>
-          <div className={`task-modal-container ${isCreateTaskModalOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header d-flex justify-content-between align-items-center">
-              <h5 className="modal-title">Create New Assignment</h5>
-              <div className="d-flex align-items-center justify-content-end">
-                <input
-                  type="text"
-                  className="form-control task-id-input"
-                  value={taskHeader.taskId}
-                  readOnly
-                  style={{ width: '150px' }}
-                />
-              </div>
-            </div>
-
-            <div className="modal-body">
-              {/* Task Header Inputs */}
-              <div className="row mb-3">
-                <div className="col-md-12">
-                  <label>Client</label>
-                  <select
-                    name="client"
-                    className="form-control"
-                    value={taskHeader.client}
-                    onChange={handleHeaderInputChange}
-                    required
-                  >
-                    <option value="">Select Client</option>
-                    {CLIENTS.map(client => (
-                      <option key={client.id} value={client.id}>
-                        {client.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <label>Task Category</label>
-                  <select
-                    name="category"
-                    className="form-control"
-                    value={taskHeader.category}
-                    onChange={(e) => {
-                      const selectedCategory = TASK_CATEGORIES.find(cat => cat.id === e.target.value);
-                      setTaskHeader(prev => ({
-                        ...prev,
-                        category: e.target.value,
-                        subcategory: ''
-                      }));
-                    }}
-                    required
-                  >
-                    <option value="">Select Category</option>
-                    {TASK_CATEGORIES.map(cat => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-md-6">
-                  <label>Subcategory</label>
-                  <select
-                    name="subcategory"
-                    className="form-control"
-                    value={taskHeader.subcategory}
-                    onChange={(e) => {
-                      const selectedSubcategory = e.target.value;
-                      setTaskHeader(prev => ({
-                        ...prev,
-                        subcategory: selectedSubcategory
-                      }));
-                    }}
-                    disabled={!taskHeader.category}
-                    required
-                  >
-                    <option value="">Select Subcategory</option>
-                    {taskHeader.category
-                      ? TASK_CATEGORIES
-                        .find(cat => cat.id === taskHeader.category)
-                        .subcategories.map(sub => (
-                          <option key={sub.id} value={sub.id}>
-                            {sub.name}
-                          </option>
-                        ))
-                      : null
-                    }
-                  </select>
-                </div>
-              </div>
-
-              {/* Task Duration Section
-              <div className="form-group">
-                <label 
-                  onClick={toggleTaskDuration} 
-                  style={{ 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
-                    fontWeight: 'bold', 
-                    padding: '5px 0' 
-                  }}
-                >
-                  <span style={{ marginRight: '10px' }}>Task Duration</span>
-                  <i 
-                    className={`fa ${isTaskDurationOpen ? 'fa-chevron-up' : 'fa-chevron-down'}`}
-                    style={{ 
-                      marginLeft: '5px',  
-                      fontSize: '0.8em',   
-                      color: '#666'        
-                    }}
-                  ></i>
-                </label>
-                {isTaskDurationOpen && (
-                  <div>
+                  <div className="modal-body ubuntu-font ubuntu-regular">
+                    {/* Task Header Inputs */}
                     <div className="row mb-3">
-                      <div className="col-md-12">
-                        <label>Select Duration</label>
-                        <div className="p-2">
-                          <DateRangePicker
-                            ranges={[dateRange]}
-                            onChange={handleDateRangeChange}
-                            moveRangeOnFirstSelection={false}
-                            months={1}
-                            direction="horizontal"
-                            preventSnapRefocus={true}
-                            calendarFocus="backwards"
+                      <div className="col-md-6">
+                        <label>Select Clients</label>
+                        <Select
+                          className="js-states"
+                          placeholder="Select Clients"
+                          options={clientOptions}
+                          values={selectedClients}
+                          disabled={false}
+                          create={true}
+                          multi={true}
+                          dropdownHandle={false}
+                          searchable={true}
+                          onChange={handleClientChange}
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label>Template</label>
+                        <select
+                          name="template"
+                          className="form-control"
+                          value={selectedTemplate}
+                          onChange={(e) => {
+                            setSelectedTemplate(e.target.value);
+                          }}
+                          required
+                        >
+                          <option value="">Select Template</option>
+                          {templateOptions.map(template => (
+                            <option key={template.value} value={template.value}>
+                              {template.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="row mb-3">
+                      <div className="col-md-6">
+                        <label>Task Category</label>
+                        <select
+                          name="category"
+                          className="form-control"
+                          value={taskHeader.category}
+                          onChange={(e) => {
+                            const selectedCategory = TASK_CATEGORIES.find(cat => cat.id === e.target.value);
+                            setTaskHeader(prev => ({
+                              ...prev,
+                              category: e.target.value,
+                              subcategory: ''
+                            }));
+                          }}
+                          required
+                        >
+                          <option value="">Select Category</option>
+                          {TASK_CATEGORIES.map(cat => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="col-md-6">
+                        <label>Subcategory</label>
+                        <select
+                          name="subcategory"
+                          className="form-control"
+                          value={taskHeader.subcategory}
+                          onChange={(e) => {
+                            const selectedSubcategory = e.target.value;
+                            setTaskHeader(prev => ({
+                              ...prev,
+                              subcategory: selectedSubcategory
+                            }));
+                          }}
+                          disabled={!taskHeader.category}
+                          required
+                        >
+                          <option value="">Select Subcategory</option>
+                          {taskHeader.category
+                            ? TASK_CATEGORIES
+                              .find(cat => cat.id === taskHeader.category)
+                              .subcategories.map(sub => (
+                                <option key={sub.id} value={sub.id}>
+                                  {sub.name}
+                                </option>
+                              ))
+                            : null
+                          }
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Task Duration Section */}
+                    <div className="row mb-3">
+                      <div className="col-md-6">
+                        <label>Task Duration</label>
+                        <div className="d-flex align-items-center position-relative">
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={`${dateRange.startDate.toLocaleDateString()} - ${dateRange.endDate.toLocaleDateString()}`}
+                            onClick={() => setShowDateRangePicker(!showDateRangePicker)}
+                            onChange={handleManualDateInput}
+                            onBlur={handleManualDateInput}
+                            placeholder="MM/DD/YYYY - MM/DD/YYYY"
+                          />
+                          <span 
+                            className="position-absolute" 
+                            style={{right: '10px', cursor: 'pointer'}}
+                            onClick={() => setShowDateRangePicker(!showDateRangePicker)}
+                          >
+                            📅
+                          </span>
+                        </div>
+                        {showDateRangePicker && (
+                          <div className="position-absolute" style={{zIndex: 1000}}>
+                            <DateRangePicker
+                              ranges={[dateRange]}
+                              onChange={handleDateRangeChange}
+                              moveRangeOnFirstSelection={false}
+                              className="date-range-picker"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      <div className="col-md-6">
+                        <label>Payment Type</label>
+                        <select 
+                          className="form-control" 
+                          value={paymentType} 
+                          onChange={(e) => {
+                            setPaymentType(e.target.value);
+                            // Reset rate when payment type changes
+                            setPaymentRate('');
+                          }}
+                        >
+                          <option value="">Select Payment Type</option>
+                          <option value="lumpsum">Lump Sum</option>
+                          <option value="payperminute">Pay Per Minute</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {paymentType === 'lumpsum' && (
+                      <div className="form-group">
+                        <label>Lump Sum Amount</label>
+                        <div className="input-group mb-3" style={{ maxWidth: '150px' }}>
+                          <div className="input-group-prepend">
+                            <span className="input-group-text">₹</span>
+                          </div>
+                          <input
+                            aria-label="Amount (to the nearest rupee)"
+                            className="form-control"
+                            type="text"
+                            value={paymentRate}
+                            onChange={(e) => setPaymentRate(e.target.value)}
+                            placeholder="Enter Lump Sum Amount"
+                          />
+                          
+                        </div>
+                      </div>
+                    )}
+
+                    {paymentType === 'payperminute' && (
+                      <div className="form-group">
+                        <label>Rate per Hour</label>
+                        <div className="input-group mb-3" style={{ maxWidth: '150px' }}>
+                          <div className="input-group-prepend">
+                            <span className="input-group-text">₹</span>
+                          </div>
+                          <input
+                            type="number"
+                            aria-label="Amount (to the nearest rupee)"
+                            className="form-control text-center"
+                            value={ratePerHour}
+                            onChange={(e) => setRatePerHourWithLogging(e.target.value)}
+                            placeholder="Enter Rate per Hour"
+                          />
+                          
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Task Details Table */}
+                    <div className="form-group">
+                      <label 
+                        style={{ 
+                          fontWeight: 'bold', 
+                          padding: '5px 0',
+                          textAlign: 'center',
+                          display: 'block'
+                        }}
+                      >
+                        Task Details
+                      </label>
+                      <div className="table-responsive">
+                        <table className="table table-bordered text-center">
+                          <thead>
+                            <tr>
+                              <th style={{ width: '50px', textAlign: 'center' }}>Sr. No.</th>
+                              <th style={{ textAlign: 'center' }}>Title</th>
+                              {paymentType === 'lumpsum' ? (
+                                <th className="text-center" style={{ width: '150px' }}>
+                                  <div className="d-flex flex-column align-items-center">
+                                    <div className="input-group mb-1">
+                                      <div className="input-group-prepend">
+                                        <span className="input-group-text">
+                                          <i className="fa fa-hourglass-half"></i>
+                                        </span>
+                                      </div>
+                                      <input
+                                        type="text"
+                                        className="form-control text-center"
+                                        style={{ maxWidth: '100px' }}
+                                        value={taskRows[0].minutes}
+                                        onChange={(e) => updateTaskRow(0, 'minutes', e.target.value)}
+                                        placeholder="Minutes"
+                                      />
+                                    </div>
+                                    <span>Minutes</span>
+                                  </div>
+                                </th>
+                              ) : (
+                                <th className="text-center" style={{ width: '150px' }}>
+                                  <span className="d-block">Minutes</span>
+                                </th>
+                              )}
+                              <th className="text-center">
+                                <button 
+                                  type="button" 
+                                  className="btn btn-success mr-1"
+                                  onClick={() => addTaskRow()}
+                                >
+                                  <i className="fa fa-plus-circle"></i>
+                                </button>
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {taskRows.map((row, index) => (
+                              <tr key={index}>
+                                <td style={{ width: '50px', textAlign: 'center' }}>{index + 1}</td>
+                                <td style={{ textAlign: 'center' }}>
+                                  <div className="d-flex justify-content-center">
+                                    <input
+                                      type="text"
+                                      className="form-control text-center"
+                                      style={{ maxWidth: '250px' }}
+                                      value={row.title}
+                                      onChange={(e) => updateTaskRow(index, 'title', e.target.value)}
+                                    />
+                                  </div>
+                                </td>
+                                {paymentType === 'lumpsum' ? (
+                                  <td>
+                                    <div className="d-flex justify-content-center">
+                                      <div className="input-group mb-3" style={{ maxWidth: '150px' }}>
+                                        <div className="input-group-prepend">
+                                          <span className="input-group-text">₹</span>
+                                        </div>
+                                        <input
+                                          type="text"
+                                          aria-label="Amount (to the nearest rupee)"
+                                          className="form-control text-center"
+                                          value={row.rate || 0}
+                                          onChange={(e) => updateTaskRow(index, 'rate', e.target.value)}
+                                          placeholder="Enter Rate"
+                                        />
+                                        <div className="input-group-append">
+                                          <span className="input-group-text">.00</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+                                ) : (
+                                  <td>
+                                    <div className="d-flex justify-content-center">
+                                      <div className="input-group">
+                                        <div className="input-group-prepend">
+                                          <span className="input-group-text">
+                                            <i className="fa fa-hourglass-half"></i>
+                                          </span>
+                                        </div>
+                                        <input
+                                          type="text"
+                                          className="form-control text-center"
+                                          style={{ maxWidth: '100px' }}
+                                          value={row.minutes}
+                                          onChange={(e) => updateTaskRow(index, 'minutes', e.target.value)}
+                                          placeholder="Minutes"
+                                        />
+                                      </div>
+                                    </div>
+                                  </td>
+                                )}
+                                <td className="text-center align-middle">
+                                  <button 
+                                    type="button" 
+                                    className="btn btn-danger mr-1"
+                                    onClick={() => removeTaskRow(index)}
+                                  >
+                                    <i className="fa fa-trash"></i>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Calculations Section */}
+                    {paymentType === 'payperminute' ? (
+                      <div className="row mb-3 d-flex">
+                        <div className="col-md-3 text-center">
+                          <label className="d-block text-center">Total Minutes</label>
+                          <input
+                            type="text"
+                            className="form-control text-center"
+                            style={{ width: '100px', margin: '0 auto' }}
+                            // value={selectedTask.rows.reduce((sum, row) => sum + (parseInt(row.minutes) || 0), 0)}
+                            value={45}
+                            readOnly
+                          />
+                        </div>
+                        <div className="col-md-3 text-center">
+                          <label className="d-block text-center">Total Hours</label>
+                          <input
+                            type="text"
+                            className="form-control text-center"
+                            style={{ width: '100px', margin: '0 auto' }}
+                            // value={(selectedTask.rows.reduce((sum, row) => sum + (parseInt(row.minutes) || 0), 0) / 60).toFixed(2)}
+                            value={45 / 60}
+                            readOnly
+                          />
+                        </div>
+                        <div className="col-md-3 text-center">
+                          <label className="d-block text-center">Rate per Hour</label>
+                          <input
+                            type="text"
+                            className="form-control text-center"
+                            style={{ width: '100px', margin: '0 auto' }}
+                            value={selectedTask.ratePerHour}
+                            readOnly
+                          />
+                        </div>
+                        <div className="col-md-3 text-center">
+                          <label className="d-block text-center">Total Cost</label>
+                          <input
+                            type="text"
+                            className="form-control text-center"
+                            style={{ width: '100px', margin: '0 auto' }}
+                            value={selectedTask.totalCost}
+                            readOnly
                           />
                         </div>
                       </div>
-                    </div>
+                    ) : paymentType === 'lumpsum' ? (
+                      <div className="row mb-3">
+                        <div className="col-md-12">
+                          <label>Total Cost</label>
+                          <input 
+                            type="text" 
+                            className="form-control" 
+                            style={{ maxWidth: '150px' }}
+                            value={`₹ ${realTimeCost.totalCost.toFixed(2)}`} 
+                            readOnly 
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+
                   </div>
-                )}
-              </div> */}
 
-          
-
-              {/* Date Range Picker */}
-              <div className="row mb-3">
-                <div className="col-md-12">
-                  <label>Task Duration</label>
-                  <div className="d-flex align-items-center position-relative">
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={`${dateRange.startDate.toLocaleDateString()} - ${dateRange.endDate.toLocaleDateString()}`}
-                      onClick={() => setShowDateRangePicker(!showDateRangePicker)}
-                      onChange={handleManualDateInput}
-                      onBlur={handleManualDateInput}
-                      placeholder="MM/DD/YYYY - MM/DD/YYYY"
-                    />
-                    <span 
-                      className="position-absolute" 
-                      style={{right: '10px', cursor: 'pointer'}}
-                      onClick={() => setShowDateRangePicker(!showDateRangePicker)}
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary mr-2"
+                      onClick={() => setIsCreateTaskModalOpen(false)}
                     >
-                      📅
-                    </span>
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={createTask}
+                    >
+                      Create Task
+                    </button>
                   </div>
-                  {showDateRangePicker && (
-                    <div className="position-absolute" style={{zIndex: 1000}}>
-                      <DateRangePicker
-                        ranges={[dateRange]}
-                        onChange={handleDateRangeChange}
-                        moveRangeOnFirstSelection={false}
-                        className="date-range-picker"
-                      />
+                </div>
+              </div>
+            )}
+
+            {/* View Task Modal */}
+            {viewTaskModalOpen && (
+              <div className={`task-modal-overlay ${viewTaskModalOpen ? 'open' : ''}`} onClick={() => setViewTaskModalOpen(false)}>
+                <div className={`task-modal-container ${viewTaskModalOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header d-flex justify-content-between align-items-center">
+                    <h5 className="modal-title ubuntu-font ubuntu-bold">View Task</h5>
+                    <button
+                      type="button"
+                      className="close"
+                      onClick={() => setViewTaskModalOpen(false)}
+                    >
+                      &times;
+                    </button>
+                  </div>
+
+                  <div className="modal-body ubuntu-font ubuntu-regular">
+                    {/* Task Details */}
+                    <div className="row mb-3">
+                      <div className="col-md-6">
+                        <label>Task ID</label>
+                        <input
+                          type="text"
+                          className="form-control task-id-input"
+                          value={selectedTask.taskId}
+                          readOnly
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label>Client</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={selectedTask.client}
+                          readOnly
+                        />
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
 
-              {/* Payment Type */}
-              <div className="form-group">
-                <label>Payment Type</label>
-                <select 
-                  className="form-control" 
-                  value={paymentType} 
-                  onChange={(e) => {
-                    setPaymentType(e.target.value);
-                    // Reset rate when payment type changes
-                    setPaymentRate('');
-                  }}
-                >
-                  <option value="">Select Payment Type</option>
-                  <option value="lumpsum">Lump Sum</option>
-                  <option value="payperminute">Pay Per Minute</option>
-                </select>
-              </div>
+                    <div className="row mb-3">
+                      <div className="col-md-6">
+                        <label>Task Category</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={selectedTask.category}
+                          readOnly
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label>Subcategory</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={selectedTask.subcategory}
+                          readOnly
+                        />
+                      </div>
+                    </div>
 
-              {paymentType === 'lumpsum' && (
-                <div className="form-group">
-                  <label>Lump Sum Rate</label>
-                  <input 
-                    type="number" 
-                    className="form-control" 
-                    value={paymentRate}
-                    onChange={(e) => setPaymentRate(e.target.value)}
-                    placeholder="Enter Lump Sum Rate"
-                  />
-                </div>
-              )}
+                
 
-              {paymentType === 'payperminute' && (
-                <div className="form-group">
-                  <label>Per Minute Rate</label>
-                  <input 
-                    type="number" 
-                    className="form-control" 
-                    value={paymentRate}
-                    onChange={(e) => setPaymentRate(e.target.value)}
-                    placeholder="Enter Per Minute Rate"
-                  />
-                </div>
-              )}
+                    {/* Task Rows */}
+                    <div className="table-responsive">
+                      <table className="table table-bordered text-center">
+                        <thead>
+                          <tr>
+                            <th style={{ width: '50px', textAlign: 'center' }}>Sr. No.</th>
+                            <th style={{ textAlign: 'center' }}>Title</th>
+                            <th style={{ width: '100px', textAlign: 'center' }}>Minutes</th>
+                            <th style={{ textAlign: 'center' }}>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedTask.rows.map((row, index) => (
+                            <tr key={index}>
+                              <td style={{ width: '50px', textAlign: 'center' }}>{index + 1}</td>
+                              <td style={{ textAlign: 'center' }}>{row.title}</td>
+                              <td style={{ width: '100px', textAlign: 'center' }}>
+                                <div className="d-flex justify-content-center">
+                                  <input
+                                    type="number"
+                                    className="form-control mr-2"
+                                    placeholder="0-100%"
+                                    min="0"
+                                    max="100"
+                                    value={row.percentage || 0}
+                                    readOnly
+                                    style={{ width: '80px', marginRight: '10px', textAlign: 'center' }}
+                                  />
+                                </div>
+                              </td>
+                              <td style={{ textAlign: 'center' }}>
+                                <ProgressBar 
+                                  now={row.percentage || 0} 
+                                  label={`${(row.percentage || 0)}%`} 
+                                  animated 
+                                  variant={
+                                    row.percentage === 0 ? 'danger' : 
+                                    row.percentage < 99 ? 'warning' : 
+                                    'success'
+                                  } 
+                                  labelProps={{ style: { color: 'black', fontWeight: 'bold' } }}
+                                  style={{ marginTop: '10px' }}
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
 
-              {/* Rate per Hour */}
-              {paymentType === 'payperminute' && (
-                <div className="form-group">
-                  <label 
-                    style={{ 
-                      fontWeight: 'bold', 
-                      marginBottom: '10px' 
-                    }}
-                  >
-                    Rate per Hour
-                  </label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={ratePerHour}
-                    onChange={(e) => setRatePerHour(e.target.value)}
-                    placeholder="Enter Rate per Hour"
-                  />
-                </div>
-              )}
+                    {/* Task Status Progress Bar */}
+                    <div className="row mb-3">
+                      <div className="col-md-12">
+                        <label>Task Progress</label>
+                        <ProgressBar 
+                          now={selectedTask.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / selectedTask.rows.length} 
+                          label={`${(selectedTask.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / selectedTask.rows.length).toFixed(0)}%`} 
+                          animated 
+                          variant={
+                            selectedTask.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / selectedTask.rows.length === 0 ? 'danger' : 
+                            selectedTask.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / selectedTask.rows.length < 99 ? 'warning' : 
+                            'success'
+                          } 
+                          labelProps={{ style: { color: 'black', fontWeight: 'bold' } }}
+                          style={{ marginTop: '10px' }}
+                        />
+                      </div>
+                    </div>
 
-              {/* Task Details Table */}
-              <div className="form-group">
-                <label 
-                  style={{ 
-                    fontWeight: 'bold', 
-                    padding: '5px 0' 
-                  }}
-                >
-                  Task Details
-                </label>
-                <div className="table-responsive">
-                  <table className="table table-bordered">
-                    <thead>
-                      <tr>
-                        <th>Title</th>
-                        <th>Minutes</th>
-                       
-                        <th>
-                          <button
-                            className="btn btn-sm btn-success"
-                            onClick={() => addTaskRow({ title: '', minutes: '0' })}
-                          >
-                            <i className="fa fa-plus"></i>
-                          </button>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {taskRows.map((row, index) => (
-                        <tr key={index}>
-                          <td>
-                            <input
-                              type="text"
-                              className="form-control"
-                              placeholder="Task Title"
-                              value={row.title}
-                              onChange={(e) => updateTaskRow(index, 'title', e.target.value)}
-                            />
-                          </td>
-                          <td>
-                            <input
-                              type="text"
-                              className="form-control"
-                              placeholder="Minutes"
-                              value={row.minutes}
-                              onChange={(e) => {
-                                const minutes = e.target.value === '' ? 0 : Number(e.target.value);
-                                updateTaskRow(index, 'minutes', minutes);
-                              }}
-                            />
-                          </td>
-                          <td>
-                            {/* <div className="d-flex align-items-center">
-                              <input
-                                type="number"
-                                className="form-control mr-2"
-                                placeholder="0-100%"
-                                min="0"
-                                max="100"
-                                value={row.percentage || 0}
-                                onChange={(e) => {
-                                  const percentage = Math.min(100, Math.max(0, Number(e.target.value)));
-                                  updateTaskRow(index, 'percentage', percentage);
-                                }}
-                                style={{ width: '80px', marginRight: '10px' }}
-                              />
-                              <ProgressBar percentage={row.percentage || 0} />
-                            </div> */}
-                          </td>
-                          <td>
+                    {/* Calculations Section */}
+                    <div className="row mb-3 d-flex">
+                      <div className="col-md-3 text-center">
+                        <label className="d-block text-center">Total Minutes</label>
+                        <input
+                          type="text"
+                          className="form-control text-center"
+                          style={{ width: '100px', margin: '0 auto' }}
+                          // value={selectedTask.rows.reduce((sum, row) => sum + (parseInt(row.minutes) || 0), 0)}
+                          value={45}
+                          readOnly
+                        />
+                      </div>
+                      <div className="col-md-3 text-center">
+                        <label className="d-block text-center">Total Hours</label>
+                        <input
+                          type="text"
+                          className="form-control text-center"
+                          style={{ width: '100px', margin: '0 auto' }}
+                          // value={(selectedTask.rows.reduce((sum, row) => sum + (parseInt(row.minutes) || 0), 0) / 60).toFixed(2)}
+                          value={45 / 60}
+                          readOnly
+                        />
+                      </div>
+                       <div className="col-md-3 text-center">
+                        <label className="d-block text-center">Rate per Hour</label>
+                        <input
+                          type="text"
+                          className="form-control text-center"
+                          style={{ width: '100px', margin: '0 auto' }}
+                          value={selectedTask.ratePerHour}
+                          readOnly
+                        />
+                      </div>
+                      <div className="col-md-3 text-center">
+                        <label className="d-block text-center">Total Cost</label>
+                        <input
+                          type="text"
+                          className="form-control text-center"
+                          style={{ width: '100px', margin: '0 auto' }}
+                          value={selectedTask.totalCost}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+
+                    {/* Status Change Buttons */}
+                    <div className="row mb-3">
+                      <div className="col-12">
+                        {selectedTask && selectedTask.status === 'created' && (
+                          <div className="d-flex justify-content-between">
                             <button
-                              className="btn btn-sm btn-danger"
-                              onClick={() => removeTaskRow(index)}
+                              className="btn btn-primary mr-2"
+                              style={{
+                                borderRadius: '20px', // Rounded pill shape
+                                padding: '0.25rem 0.75rem',
+                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                                letterSpacing: '0.5px',
+                                border: '2px solid',
+                                transition: 'all 0.3s ease'
+                              }}
+                              onClick={() => {
+                                handleStatusChange(selectedTask.taskId, 'in progress');
+                                setViewTaskModalOpen(false);
+                              }}
                             >
-                              <i className="fa fa-trash"></i>
+                              In Progress
                             </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Calculations Section */}
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <label>Total Minutes</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={realTimeCost.totalMinutes}
-                    readOnly
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label>Total Hours</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={realTimeCost.formattedHours}
-                    readOnly
-                  />
-                </div>
-              </div>
-
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <label>Total Cost</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={realTimeCost.totalCost.toFixed(2)}
-                    readOnly
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-secondary mr-2"
-                onClick={() => setIsCreateTaskModalOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={createTask}
-              >
-                Create Task
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* View Task Modal */}
-      {viewTaskModalOpen && (
-        <div className={`task-modal-overlay ${viewTaskModalOpen ? 'open' : ''}`} onClick={() => setViewTaskModalOpen(false)}>
-          <div className={`task-modal-container ${viewTaskModalOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header d-flex justify-content-between align-items-center">
-              <h5 className="modal-title">View Task</h5>
-              <button
-                type="button"
-                className="close"
-                onClick={() => setViewTaskModalOpen(false)}
-              >
-                &times;
-              </button>
-            </div>
-
-            <div className="modal-body">
-              {/* Task Details */}
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <label>Task ID</label>
-                  <input
-                    type="text"
-                    className="form-control task-id-input"
-                    value={selectedTask.taskId}
-                    readOnly
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label>Client</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={selectedTask.client}
-                    readOnly
-                  />
-                </div>
-              </div>
-
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <label>Task Category</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={selectedTask.category}
-                    readOnly
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label>Subcategory</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={selectedTask.subcategory}
-                    readOnly
-                  />
-                </div>
-              </div>
-
-              {/* Task Rows */}
-              <div className="table-responsive">
-                <table className="table table-bordered">
-                  <thead>
-                    <tr>
-                      <th>Title</th>
-                      <th>Minutes</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedTask.rows.map((row, index) => (
-                      <tr key={index}>
-                        <td>{row.title}</td>
-                        <td>{row.minutes}</td>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <input
-                              type="number"
-                              className="form-control mr-2"
-                              placeholder="0-100%"
-                              min="0"
-                              max="100"
-                              value={row.percentage || 0}
-                              readOnly
-                              style={{ width: '80px', marginRight: '10px' }}
-                            />
-                            <ProgressBar percentage={row.percentage || 0} />
+                            <button
+                              className="btn btn-success"
+                              style={{
+                                borderRadius: '20px', // Rounded pill shape
+                                padding: '0.25rem 0.75rem',
+                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                                letterSpacing: '0.5px',
+                                border: '2px solid',
+                                transition: 'all 0.3s ease'
+                              }}
+                              onClick={() => {
+                                handleStatusChange(selectedTask.taskId, 'completed');
+                                setViewTaskModalOpen(false);
+                              }}
+                            >
+                              Mark Completed
+                            </button>
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        )}
 
-              {/* Calculations Section */}
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <label>Total Minutes</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    // value={selectedTask.rows.reduce((sum, row) => sum + (parseInt(row.minutes) || 0), 0)}
-                    value={45}
-                    readOnly
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label>Total Hours</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    // value={(selectedTask.rows.reduce((sum, row) => sum + (parseInt(row.minutes) || 0), 0) / 60).toFixed(2)}
-                    value={45 / 60}
-                    readOnly
-                  />
-                </div>
-              </div>
+                        {selectedTask && selectedTask.status === 'in progress' && (
+                          <div className="d-flex justify-content-between">
+                            <button
+                              className="btn btn-success"
+                              style={{
+                                borderRadius: '20px', // Rounded pill shape
+                                padding: '0.25rem 0.75rem',
+                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                                letterSpacing: '0.5px',
+                                border: '2px solid',
+                                transition: 'all 0.3s ease'
+                              }}
+                              onClick={() => {
+                                handleStatusChange(selectedTask.taskId, 'completed');
+                                setViewTaskModalOpen(false);
+                              }}
+                            >
+                              Mark Completed
+                            </button>
+                          </div>
+                        )}
 
-              <div className="row mb-3">
-                <div className="col-md-6">
-                  <label>Rate per Hour</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={selectedTask.ratePerHour}
-                    readOnly
-                  />
-                </div>
-                <div className="col-md-6">
-                  <label>Total Cost</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={selectedTask.totalCost}
-                    readOnly
-                  />
-                </div>
-              </div>
-
-              {/* Status Change Buttons */}
-              <div className="row mb-3">
-                <div className="col-12">
-                  {selectedTask && selectedTask.status === 'created' && (
-                    <div className="d-flex justify-content-between">
-                      <button
-                        className="btn btn-primary mr-2"
-                        onClick={() => {
-                          handleStatusChange(selectedTask.taskId, 'in progress');
-                          setViewTaskModalOpen(false);
-                        }}
-                      >
-                        In Progress
-                      </button>
-                      <button
-                        className="btn btn-success"
-                        onClick={() => {
-                          handleStatusChange(selectedTask.taskId, 'completed');
-                          setViewTaskModalOpen(false);
-                        }}
-                      >
-                        Mark Completed
-                      </button>
+                        {selectedTask && selectedTask.status === 'completed' && (
+                          <div className="d-flex justify-content-between">
+                            <button
+                              className="btn btn-primary"
+                              style={{
+                                borderRadius: '20px', // Rounded pill shape
+                                padding: '0.25rem 0.75rem',
+                                textTransform: 'uppercase',
+                                fontWeight: '600',
+                                letterSpacing: '0.5px',
+                                border: '2px solid',
+                                transition: 'all 0.3s ease'
+                              }}
+                              onClick={() => {
+                                handleCreateInvoice(selectedTask.taskId);
+                              }}
+                            >
+                              Create Invoice
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  </div>
 
-                  {selectedTask && selectedTask.status === 'in progress' && (
-                    <div className="d-flex justify-content-between">
-                      <button
-                        className="btn btn-success"
-                        onClick={() => {
-                          handleStatusChange(selectedTask.taskId, 'completed');
-                          setViewTaskModalOpen(false);
-                        }}
-                      >
-                        Mark Completed
-                      </button>
-                    </div>
-                  )}
-
-                  {selectedTask && selectedTask.status === 'completed' && (
-                    <div className="d-flex justify-content-between">
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => {
-                          handleCreateInvoice(selectedTask.taskId);
-                        }}
-                      >
-                        Create Invoice
-                      </button>
-                    </div>
-                  )}
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary mr-2"
+                      style={{
+                        borderRadius: '20px', // Rounded pill shape
+                        padding: '0.25rem 0.75rem',
+                        textTransform: 'uppercase',
+                        fontWeight: '600',
+                        letterSpacing: '0.5px',
+                        border: '2px solid',
+                        transition: 'all 0.3s ease'
+                      }}
+                      onClick={() => setViewTaskModalOpen(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            <div className="modal-footer">
-              <button
-                type="button"
-                className="btn btn-secondary mr-2"
-                onClick={() => setViewTaskModalOpen(false)}
-              >
-                Close
-              </button>
-            </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

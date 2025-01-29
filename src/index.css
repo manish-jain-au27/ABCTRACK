@@ -149,6 +149,11 @@ code {
   box-shadow: 0 0 0 0.2rem #cec4fd !important;
 }
 
+.progress-bar {
+  color: black !important;
+  font-weight: bold;
+}
+
 @media screen and (max-width: 765px){
   .navbar-brand {
     padding: 15px 0 !important;
@@ -163,4 +168,23 @@ code {
    .navbar-fixed-top .navbar-right {
     width: calc(100% - 180px) !important;
   }
+}
+
+.modal-slide-right {
+  animation: slideFromRight 0.3s ease-out;
+}
+
+@keyframes slideFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.modal-dialog {
+  transition: all 0.3s ease;
 }

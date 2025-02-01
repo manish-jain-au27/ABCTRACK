@@ -154,6 +154,96 @@ code {
   font-weight: bold;
 }
 
+/* Validation Error Styles */
+.parsley-error {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.parsley-error.form-control {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.parsley-error.js-states {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.parsley-error-select {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.parsley-errors-list {
+  color: #dc3545;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  list-style: none;
+  padding: 0;
+  display: block;
+}
+
+.parsley-errors-list li {
+  margin-bottom: 0.25rem;
+}
+
+.calendar-dropdown {
+  position: absolute;
+  top: 100%; /* Position below the calendar icon */
+  right: 0;
+  z-index: 1000;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  min-width: 250px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.date-range-dropdown {
+  position: absolute;
+  top: 100%; /* Position below the input */
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background-color: white;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.custom-calendar-inside-textbox {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  z-index: 1000;
+  background: white;
+  border: 1px solid #ced4da;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.custom-calendar-inside-textbox {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  z-index: 1000;
+  background: white;
+  border: 1px solid #ced4da;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
 @media screen and (max-width: 765px){
   .navbar-brand {
     padding: 15px 0 !important;

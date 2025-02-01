@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { connect } from 'react-redux';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { Link } from 'react-router-dom';
 import PageHeader from "../../components/PageHeader";
 import { DateRangePicker } from 'react-date-range';
@@ -8,6 +11,10 @@ import { enUS } from 'date-fns/locale';
 import { addDays } from 'date-fns';
 import Select from "react-dropdown-select";
 import { ProgressBar } from "react-bootstrap"; // Import ProgressBar from react-bootstrap
+import CustomTable from '../../components/customUI/CustomTable';
+import { notifyGeneralInfo } from '../../actions/UIElementsAction'; // Import notifyGeneralInfo from UIElementsAction
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 
 // Constants
 const TASK_CATEGORIES = [
@@ -37,7 +44,7 @@ const CLIENTS = [
   { id: 'client3', name: 'Innovative Inc' }
 ];
 
-const AppTaskbar = () => {
+const AppTaskbar = (props) => {
   const [state, setState] = useState([
     {
       startDate: new Date(),
@@ -48,7 +55,7 @@ const AppTaskbar = () => {
 
   const [tasks, setTasks] = useState([]);
   const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
-  
+
   // New state for controlling task duration section visibility
   const [isTaskDurationOpen, setIsTaskDurationOpen] = useState(false);
 
@@ -76,8 +83,8 @@ const AppTaskbar = () => {
   const [selectedTask, setSelectedTask] = useState({
     title: '',
     rows: [],
-    ratePerHour: 0,  
-    totalCost: 0     
+    ratePerHour: 0,
+    totalCost: 0
   });
 
   const [selectedClients, setSelectedClients] = useState([]);
@@ -118,7 +125,8 @@ const AppTaskbar = () => {
       category: "Development",
       subcategory: "Frontend",
       ratePerHour: "2000",
-      totalCost: "Rs.2000",
+      totalCost: "2000",
+      paymentType: "lumpsum"
     },
     {
       index: "2",
@@ -143,7 +151,8 @@ const AppTaskbar = () => {
       category: "Development",
       subcategory: "Frontend",
       ratePerHour: "2000",
-      totalCost: "Rs.3400",
+      totalCost: "3400",
+      paymentType: "Pay Per Minute"
     },
   ];
 
@@ -163,7 +172,7 @@ const AppTaskbar = () => {
     return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   };
 
- 
+
   const generateTaskId = () => {
     const lastTaskId = localStorage.getItem('lastTaskId');
     const newTaskId = lastTaskId ? parseInt(lastTaskId) + 1 : 1;
@@ -300,7 +309,86 @@ const AppTaskbar = () => {
     setRealTimeCost(updatedCost);
   };
 
+  // Add validation state
+  const [validationErrors, setValidationErrors] = useState({
+    clients: false,
+    template: false,
+    category: false,
+    subcategory: false,
+    dateRange: false,
+    paymentType: false,
+    taskDetails: false
+  });
+
   const createTask = () => {
+    // Validate clients
+    const clientsValid = selectedClients.length > 0;
+    
+    // Validate template
+    const templateValid = selectedTemplate !== '';
+    
+    // Validate category and subcategory
+    const categoryValid = taskHeader.category !== '';
+    const subcategoryValid = taskHeader.subcategory !== '';
+    
+    // Validate date range
+    const dateRangeValid = dateRange.startDate && dateRange.endDate && 
+      dateRange.startDate <= dateRange.endDate;
+    
+    // Validate payment type
+    const paymentTypeValid = paymentType !== '';
+    
+    // Validate task details
+    const taskDetailsValid = taskRows.length > 0 && 
+      taskRows.every(row => row.title && 
+        (paymentType === 'lumpsum' ? row.rate : row.minutes)
+      );
+
+    // Prepare validation errors
+    const errors = {
+      clients: !clientsValid,
+      template: !templateValid,
+      category: !categoryValid,
+      subcategory: !subcategoryValid,
+      dateRange: !dateRangeValid,
+      paymentType: !paymentTypeValid,
+      taskDetails: !taskDetailsValid
+    };
+
+    // Update validation errors
+    setValidationErrors(errors);
+
+    // Collect and show validation error notifications
+    const errorMessages = [];
+    if (!clientsValid) errorMessages.push('Please select at least one client');
+    if (!templateValid) errorMessages.push('Please select a template');
+    if (!categoryValid) errorMessages.push('Please select a category');
+    if (!subcategoryValid) errorMessages.push('Please select a subcategory');
+    if (!dateRangeValid) errorMessages.push('Please provide a valid date range');
+    if (!paymentTypeValid) errorMessages.push('Please select a payment type');
+    if (!taskDetailsValid) errorMessages.push('Please fill in all task details correctly');
+
+    // Show error notifications if there are validation errors
+    if (errorMessages.length > 0) {
+      errorMessages.forEach(message => {
+        toast.error(message, {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: {
+            backgroundColor: '#dc3545', // Bootstrap danger red
+            color: 'white',
+          }
+        });
+      });
+      return; // Stop execution if there are validation errors
+    }
+
+    // Only create task if all validations pass
     const taskRowTitles = taskRows.map(row => row.title).filter(title => title.trim() !== '');
     const combinedTaskTitle = taskRowTitles.length > 0
       ? taskRowTitles.join(', ')
@@ -323,13 +411,66 @@ const AppTaskbar = () => {
       status: 'created'
     };
 
-    setTasks(prevTasks => {
-      const updatedTasks = [...prevTasks, newTask];
+    // Validate task creation
+    if (taskRows.length > 0) {
+      // Show success notification first
+      toast.success('Task created successfully!', {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        style: {
+          backgroundColor: '#28a745', // Bootstrap success green
+          color: 'white',
+        }
+      });
 
-      return updatedTasks;
-    });
+      // Check for empty task rows and show error if needed
+      const emptyTaskRows = taskRows.filter(row => !row.title.trim());
+      if (emptyTaskRows.length > 0) {
+        toast.error(`${emptyTaskRows.length} task row(s) are empty!`, {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          style: {
+            backgroundColor: '#dc3545', // Bootstrap danger red
+            color: 'white',
+          }
+        });
+      }
 
-    setIsCreateTaskModalOpen(false);
+      setTasks(prevTasks => {
+        const updatedTasks = [...prevTasks, newTask];
+        return updatedTasks;
+      });
+
+      // Delay closing the modal to ensure notifications are visible
+      setTimeout(() => {
+        setIsCreateTaskModalOpen(false);
+      }, 3000); // 3 seconds delay
+    } else {
+      // Error notification for no task rows
+      toast.error('No task rows created!', {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        style: {
+          backgroundColor: '#dc3545', // Bootstrap danger red
+          color: 'white',
+        }
+      });
+    }
   };
 
   // Load tasks from localStorage on component mount
@@ -348,7 +489,6 @@ const AppTaskbar = () => {
     }
   }, []);
 
- 
   const viewTask = (row) => {
     setSelectedTask({
       ...selectedTask,
@@ -494,7 +634,7 @@ const AppTaskbar = () => {
       wrap: true,
       width: '20%',
       minWidth: '150px',
-      maxWidth: '250px',
+      maxWidth: '400px',
       center: true,
       headerStyle: () => ({
         textAlign: 'center',
@@ -530,10 +670,58 @@ const AppTaskbar = () => {
       })
     },
     {
+      name: "Payment Type",
+      selector: (row) => row.paymentType || 'Not Specified',
+      sortable: true,
+      wrap: true,
+      width: '10%',
+      minWidth: '100px',
+      maxWidth: '150px',
+      center: true,
+      headerStyle: () => ({
+        textAlign: 'center',
+        justifyContent: 'center'
+      })
+    },
+    {
+      name: "Assignment Value",
+      selector: (row) => {
+        // If the row has multiple sub-rows, sum their totalcost
+        if (row.rows) {
+          const totalCost = row.rows.reduce((sum, r) => {
+            // Use totalcost if available, otherwise use rate
+            const cost = Number(r.totalcost || r.rate || 0);
+            return sum + cost;
+          }, 0);
+          return totalCost;
+        }
+        
+        // For single rows, use totalcost or rate
+        return Number(row.totalcost || row.rate || 0);
+      },
+      format: (row) => {
+        // Format the value with comma separators and currency symbol
+        const value = row.rows 
+          ? row.rows.reduce((sum, r) => sum + Number(r.totalcost || r.rate || 0), 0)
+          : Number(row.totalcost || row.rate || 0);
+        return `₹ ${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      },
+      sortable: true,
+      wrap: true,
+      width: '10%',
+      minWidth: '100px',
+      maxWidth: '150px',
+      center: true,
+      headerStyle: () => ({
+        textAlign: 'center',
+        justifyContent: 'center'
+      })
+    },
+    {
       name: "Status",
       cell: (row) => {
         // Calculate overall percentage based on task rows
-        const averagePercentage = row.rows 
+        const averagePercentage = row.rows
           ? Math.round(row.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / row.rows.length)
           : 0;
 
@@ -549,7 +737,7 @@ const AppTaskbar = () => {
 
         return (
           <div className="d-flex justify-content-center w-100 text-center">
-            <span 
+            <span
               className={`badge rounded-pill text-uppercase fw-bold ${color}`}
               style={{
                 fontSize: '0.55rem',
@@ -579,39 +767,6 @@ const AppTaskbar = () => {
       })
     },
     {
-      name: "Minutes",
-      selector: (row) => {
-        const totalMinutes = row.rows 
-          ? row.rows.reduce((sum, r) => sum + Number(r.minutes), 0) 
-          : 0;
-        return totalMinutes;
-      },
-      sortable: true,
-      wrap: true,
-      width: '10%',
-      minWidth: '80px',
-      maxWidth: '120px',
-      center: true,
-      headerStyle: () => ({
-        textAlign: 'center',
-        justifyContent: 'center'
-      })
-    },
-    {
-      name: "Cost",
-      selector: (row) => row.totalCost,
-      sortable: true,
-      wrap: true,
-      width: '8%',
-      minWidth: '80px',
-      maxWidth: '120px',
-      center: true,
-      headerStyle: () => ({
-        textAlign: 'center',
-        justifyContent: 'center'
-      })
-    },
-    {
       name: "Action",
       cell: (row) => (
         <div className="d-flex justify-content-center w-100">
@@ -632,7 +787,7 @@ const AppTaskbar = () => {
                 ...selectedTask,
                 ...row,
                 ratePerHour: row.ratePerHour || selectedTask.ratePerHour || 0,
-                totalCost: row.totalCost || selectedTask.totalCost || 0
+                totalCost: row.totalCost || selectedTask.totalCost || 2500
               });
               setViewTaskModalOpen(true);
             }}
@@ -745,10 +900,10 @@ const AppTaskbar = () => {
   // Add handler for date range change
   const handleDateRangeChange = (ranges) => {
     const { startDate, endDate } = ranges.selection;
-    
+
     // Update date range state
     setDateRange(ranges.selection);
-    
+
     // Only close and update when both start and end dates are selected
     if (startDate && endDate && startDate !== endDate) {
       setShowDateRangePicker(false);
@@ -767,12 +922,12 @@ const AppTaskbar = () => {
   const handleManualDateInput = (e) => {
     const inputValue = e.target.value;
     const datePattern = /^(\d{1,2}\/\d{1,2}\/\d{4}) - (\d{1,2}\/\d{1,2}\/\d{4})$/;
-  
+
     if (datePattern.test(inputValue)) {
       const [startDateStr, endDateStr] = inputValue.split(' - ');
       const startDate = new Date(startDateStr);
       const endDate = new Date(endDateStr);
-      
+
       if (!isNaN(startDate) && !isNaN(endDate) && startDate <= endDate) {
         setDateRange({
           startDate,
@@ -795,9 +950,9 @@ const AppTaskbar = () => {
     const handleClickOutside = (event) => {
       const dateRangeElement = document.querySelector('.date-range-picker');
       const inputElement = event.target.closest('.form-control');
-      
-      if (dateRangeElement && !dateRangeElement.contains(event.target) && 
-          (!inputElement || !inputElement.closest('.date-range-picker'))) {
+
+      if (dateRangeElement && !dateRangeElement.contains(event.target) &&
+        (!inputElement || !inputElement.closest('.date-range-picker'))) {
         setShowDateRangePicker(false);
       }
     };
@@ -819,6 +974,61 @@ const AppTaskbar = () => {
       percentage: 0
     };
     addTaskRow(newRow);
+  };
+
+  // Notification handling from Redux
+  useEffect(() => {
+    if (props.notifyData && props.notifyData.length > 0) {
+      const notification = props.notifyData[props.notifyData.length - 1];
+      // Only show notifications that are not theme-related
+      if (notification.type !== 'info' || notification.dialogText.indexOf('theme') === -1) {
+        switch (notification.type) {
+          case 'success':
+            toast.success(notification.dialogText, {
+              position: "top-right",
+              autoClose: 3000,
+            });
+            break;
+          case 'error':
+            toast.error(notification.dialogText, {
+              position: "top-right",
+              autoClose: 3000,
+            });
+            break;
+          case 'info':
+            toast.info(notification.dialogText, {
+              position: "top-right",
+              autoClose: 3000,
+            });
+            break;
+          case 'warning':
+            toast.warning(notification.dialogText, {
+              position: "top-right",
+              autoClose: 3000,
+            });
+            break;
+          default:
+            toast(notification.dialogText, {
+              position: "top-right",
+              autoClose: 3000,
+            });
+        }
+      }
+    }
+  }, [props.notifyData]);
+
+  const [showExecutionDatePicker, setShowExecutionDatePicker] = useState(false);
+  const [executionDate, setExecutionDate] = useState(
+    selectedTask.executionDate 
+      ? new Date(selectedTask.executionDate) 
+      : new Date()
+  );
+
+  const handleTaskDetailChange = (field, value) => {
+    setSelectedTask(prevTask => ({
+      ...prevTask,
+      [field]: value
+    }));
   };
 
   return (
@@ -974,111 +1184,44 @@ const AppTaskbar = () => {
             </div>
 
             {/* Tasks Table */}
-            <div className="col-lg-12">
-              <div className="card product_item_list product-order-list">
-                <div className="header">
-                  <h2>Task List</h2>
-                </div>
-                <div className="body">
-                  <form className="ng-untouched ng-dirty ng-invalid mb-3">
-                    <div className="row d-flex justify-content-between">
-                      <div className="form-group col-lg-3">
-                        <label>Search</label>
-                        <input
-                          className={`form-control`}
-                          name="search"
-                          onChange={handleSearch}
-                          placeholder="Search tasks..."
-                        />
-                      </div>
-                    </div>
-                  </form>
-                  <div className="table-responsive">
-                    <table className="table table-hover m-b-0">
-                      <thead className="thead-dark">
-                        <tr>
-                          <th style={{ width: '50px' }}>Date</th>
-                          <th>Task ID</th>
-                          <th>Title</th>
-                          <th>Client</th>
-                          <th>Category</th>
-                          <th style={{ width: '100px' }}>Minutes</th>
-                          <th>Status</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {rows.map((task) => (
-                          <tr key={task.taskId}>
-                            <td style={{ width: '50px' }}>{task.date || new Date().toLocaleDateString('en-GB')}</td>
-                            <td>{task.taskId}</td>
-                            <td>{task.title}</td>
-                            <td>{task.client}</td>
-                            <td>{task.category}</td>
-                            <td style={{ width: '100px' }}>
-                              {task.rows 
-                                ? task.rows.reduce((sum, r) => sum + Number(r.minutes), 0) 
-                                : 0} mins
-                            </td>
-                            <td>
-                              {/* Color-coded status display */}
-                              <div style={{ width: '100%' }}>
-                                <ProgressBar 
-                                  now={task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length} 
-                                  label={`${(task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length).toFixed(0)}%`} 
-                                  animated 
-                                  variant={
-                                    task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length === 0 ? 'danger' : 
-                                    task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length < 99 ? 'warning' : 
-                                    'success'
-                                  } 
-                                  labelProps={{ style: { color: 'black', fontWeight: 'bold' } }}
-                                  style={{ marginTop: '10px' }}
-                                />
-                              </div>
-                            </td>
-                            <td>
-                              <Link 
-                                to="#" 
-                                className="btn btn-outline-info mr-1" 
-                                onClick={() => {
-                                  setSelectedTask({
-                                    ...selectedTask,
-                                    ...task,
-                                    ratePerHour: task.ratePerHour || selectedTask.ratePerHour || 0,
-                                    totalCost: task.totalCost || selectedTask.totalCost || 0
-                                  });
-                                  setViewTaskModalOpen(true);
-                                }}
-                              >
-                                <i className="icon-eye"></i>
-                              </Link>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <CustomTable
+              title="Task List"
+              rows={rows}
+              onSearch={handleSearch}
+              onRowAction={(task) => {
+                setSelectedTask({
+                  ...selectedTask,
+                  ...task,
+                  ratePerHour: task.ratePerHour || selectedTask.ratePerHour || 0,
+                  totalCost: task.totalCost || selectedTask.totalCost || 2500
+                });
+                setViewTaskModalOpen(true);
+              }}
+            />
 
             {/* Create Task Sliding Panel */}
             {isCreateTaskModalOpen && (
               <div className={`task-modal-overlay ${isCreateTaskModalOpen ? 'open' : ''}`} onClick={() => setIsCreateTaskModalOpen(false)}>
                 <div className={`task-modal-container ${isCreateTaskModalOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
-                  <div className="modal-header d-flex justify-content-between align-items-center">
-                    <h5 className="modal-title ubuntu-font ubuntu-bold">Create New Assignment</h5>
-                    <div className="d-flex align-items-center justify-content-end">
-                      <input
-                        type="text"
-                        className="form-control task-id-input text-center"
-                        value={taskHeader.taskId}
-                        readOnly
-                        style={{ width: '150px' }}
-                      />
-                    </div>
-                  </div>
+                <div className="modal-header d-flex justify-content-between align-items-center">
+                <h5 className="modal-title ubuntu-font ubuntu-bold">View Task</h5>
+                <div className="d-flex align-items-center justify-content-end">
+                  <input
+                    type="text"
+                    className="form-control task-id-input text-center"
+                    value={taskHeader.taskId || 'N/A'}
+                    readOnly
+                    style={{ width: '150px' }}
+                  />
+                  <button
+                    type="button"
+                    className="close ml-2"
+                    onClick={() => setIsCreateTaskModalOpen(false)}
+                  >
+                    &times;
+                  </button>
+                </div>
+              </div>
 
                   <div className="modal-body ubuntu-font ubuntu-regular">
                     {/* Task Header Inputs */}
@@ -1096,7 +1239,31 @@ const AppTaskbar = () => {
                           dropdownHandle={false}
                           searchable={true}
                           onChange={handleClientChange}
+                          styles={{
+                            control: (base) => ({
+                              ...base,
+                              fontSize: '0.9rem',
+                              minHeight: '38px',
+                            }),
+                            placeholder: (base) => ({
+                              ...base,
+                              color: '#6c757d', // Bootstrap's default placeholder color
+                              fontSize: '0.9rem',
+                              opacity: 0.7
+                            }),
+                            singleValue: (base) => ({
+                              ...base,
+                              fontSize: '0.9rem'
+                            }),
+                            input: (base) => ({
+                              ...base,
+                              fontSize: '0.9rem'
+                            })
+                          }}
                         />
+                        {validationErrors.clients && (
+                          <div className="text-danger">Please select at least one client.</div>
+                        )}
                       </div>
                       <div className="col-md-6">
                         <label>Template</label>
@@ -1116,6 +1283,9 @@ const AppTaskbar = () => {
                             </option>
                           ))}
                         </select>
+                        {validationErrors.template && (
+                          <div className="text-danger">Please select a template.</div>
+                        )}
                       </div>
                     </div>
 
@@ -1143,6 +1313,9 @@ const AppTaskbar = () => {
                             </option>
                           ))}
                         </select>
+                        {validationErrors.category && (
+                          <div className="text-danger">Please select a category.</div>
+                        )}
                       </div>
                       <div className="col-md-6">
                         <label>Subcategory</label>
@@ -1172,6 +1345,9 @@ const AppTaskbar = () => {
                             : null
                           }
                         </select>
+                        {validationErrors.subcategory && (
+                          <div className="text-danger">Please select a subcategory.</div>
+                        )}
                       </div>
                     </div>
 
@@ -1189,30 +1365,49 @@ const AppTaskbar = () => {
                             onBlur={handleManualDateInput}
                             placeholder="MM/DD/YYYY - MM/DD/YYYY"
                           />
-                          <span 
-                            className="position-absolute" 
-                            style={{right: '10px', cursor: 'pointer'}}
-                            onClick={() => setShowDateRangePicker(!showDateRangePicker)}
+                          <span
+                            className="position-absolute calendar-icon"
+                            style={{ right: '10px', cursor: 'pointer' }}
+                            onClick={(e) => {
+                              e.stopPropagation(); // Prevent event from propagating to input
+                              setShowDateRangePicker(prev => !prev);
+                            }}
                           >
                             📅
                           </span>
                         </div>
                         {showDateRangePicker && (
-                          <div className="position-absolute" style={{zIndex: 1000}}>
+                          <div 
+                            className="position-absolute date-range-dropdown" 
+                            style={{ 
+                              zIndex: 1000,
+                              top: '100%', // Position below the input
+                              left: 0,
+                              width: '100%'
+                            }}
+                            onClick={(e) => e.stopPropagation()} // Prevent clicking inside dropdown from closing it
+                          >
                             <DateRangePicker
                               ranges={[dateRange]}
-                              onChange={handleDateRangeChange}
+                              onChange={(selection) => {
+                                handleDateRangeChange(selection);
+                              }}
                               moveRangeOnFirstSelection={false}
+                              showSelectionPreview={true}
+                              editableDateInputs={true}
                               className="date-range-picker"
                             />
                           </div>
                         )}
+                        {validationErrors.dateRange && (
+                          <div className="text-danger">Please select a valid date range.</div>
+                        )}
                       </div>
                       <div className="col-md-6">
                         <label>Payment Type</label>
-                        <select 
-                          className="form-control" 
-                          value={paymentType} 
+                        <select
+                          className="form-control"
+                          value={paymentType}
                           onChange={(e) => {
                             setPaymentType(e.target.value);
                             // Reset rate when payment type changes
@@ -1223,72 +1418,26 @@ const AppTaskbar = () => {
                           <option value="lumpsum">Lump Sum</option>
                           <option value="payperminute">Pay Per Minute</option>
                         </select>
+                        {validationErrors.paymentType && (
+                          <div className="text-danger">Please select a payment type.</div>
+                        )}
                       </div>
                     </div>
-
-                    {paymentType === 'lumpsum' && (
-                      <div className="form-group">
-                        <label>Lump Sum Amount</label>
-                        <div className="input-group mb-3" style={{ maxWidth: '150px' }}>
-                          <div className="input-group-prepend">
-                            <span className="input-group-text">₹</span>
-                          </div>
-                          <input
-                            aria-label="Amount (to the nearest rupee)"
-                            className="form-control"
-                            type="text"
-                            value={paymentRate}
-                            onChange={(e) => setPaymentRate(e.target.value)}
-                            placeholder="Enter Lump Sum Amount"
-                          />
-                          
-                        </div>
-                      </div>
-                    )}
-
-                    {paymentType === 'payperminute' && (
-                      <div className="form-group">
-                        <label>Rate per Hour</label>
-                        <div className="input-group mb-3" style={{ maxWidth: '150px' }}>
-                          <div className="input-group-prepend">
-                            <span className="input-group-text">₹</span>
-                          </div>
-                          <input
-                            type="number"
-                            aria-label="Amount (to the nearest rupee)"
-                            className="form-control text-center"
-                            value={ratePerHour}
-                            onChange={(e) => setRatePerHourWithLogging(e.target.value)}
-                            placeholder="Enter Rate per Hour"
-                          />
-                          
-                        </div>
-                      </div>
-                    )}
-
+                   
                     {/* Task Details Table */}
                     <div className="form-group">
-                      <label 
-                        style={{ 
-                          fontWeight: 'bold', 
-                          padding: '5px 0',
-                          textAlign: 'center',
-                          display: 'block'
-                        }}
-                      >
-                        Task Details
-                      </label>
+
                       <div className="table-responsive">
                         <table className="table table-bordered text-center">
                           <thead>
                             <tr>
                               <th style={{ width: '50px', textAlign: 'center' }}>Sr. No.</th>
-                              <th style={{ textAlign: 'center' }}>Title</th>
+                              <th style={{ textAlign: 'center' }}>Task Details</th>
                               {paymentType === 'lumpsum' ? (
                                 <th className="text-center" style={{ width: '150px' }}>
                                   <div className="d-flex flex-column align-items-center">
-                                   
-                                    <span>Rate</span>
+
+                                    <span>Fees</span>
                                   </div>
                                 </th>
                               ) : (
@@ -1297,8 +1446,8 @@ const AppTaskbar = () => {
                                 </th>
                               )}
                               <th className="text-center">
-                                <button 
-                                  type="button" 
+                                <button
+                                  type="button"
                                   className="btn btn-success mr-1"
                                   onClick={() => addTaskRow()}
                                 >
@@ -1316,7 +1465,7 @@ const AppTaskbar = () => {
                                     <input
                                       type="text"
                                       className="form-control text-center"
-                                      style={{ maxWidth: '250px' }}
+                                      style={{ maxWidth: '500px' }} 
                                       value={row.title}
                                       onChange={(e) => updateTaskRow(index, 'title', e.target.value)}
                                     />
@@ -1325,7 +1474,7 @@ const AppTaskbar = () => {
                                 {paymentType === 'lumpsum' ? (
                                   <td>
                                     <div className="d-flex justify-content-center">
-                                      <div className="input-group mb-3" style={{ maxWidth: '150px' }}>
+                                      <div className="input-group mb-3" style={{ maxWidth: '150px',marginTop:'10px' }}>
                                         <div className="input-group-prepend">
                                           <span className="input-group-text">₹</span>
                                         </div>
@@ -1337,9 +1486,6 @@ const AppTaskbar = () => {
                                           onChange={(e) => updateTaskRow(index, 'rate', e.target.value)}
                                           placeholder="Enter Rate"
                                         />
-                                        <div className="input-group-append">
-                                          <span className="input-group-text">.00</span>
-                                        </div>
                                       </div>
                                     </div>
                                   </td>
@@ -1349,7 +1495,7 @@ const AppTaskbar = () => {
                                       <div className="input-group">
                                         <div className="input-group-prepend">
                                           <span className="input-group-text">
-                                            <i className="fa fa-hourglass-half"></i>
+                                            <i className="fa fa-clock-o"></i>
                                           </span>
                                         </div>
                                         <input
@@ -1365,8 +1511,8 @@ const AppTaskbar = () => {
                                   </td>
                                 )}
                                 <td className="text-center align-middle">
-                                  <button 
-                                    type="button" 
+                                  <button
+                                    type="button"
                                     className="btn btn-danger mr-1"
                                     onClick={() => removeTaskRow(index)}
                                   >
@@ -1382,61 +1528,112 @@ const AppTaskbar = () => {
 
                     {/* Calculations Section */}
                     {paymentType === 'payperminute' ? (
-                      <div className="row mb-3 d-flex">
-                        <div className="col-md-3 text-center">
-                          <label className="d-block text-center">Total Minutes</label>
-                          <input
-                            type="text"
-                            className="form-control text-center"
-                            style={{ width: '100px', margin: '0 auto' }}
-                            // value={selectedTask.rows.reduce((sum, row) => sum + (parseInt(row.minutes) || 0), 0)}
-                            value={45}
-                            readOnly
-                          />
+                      <div className="row mb-3 d-flex justify-content-center align-items-center text-center">
+                        <div className="col-md-3 d-flex flex-column align-items-center">
+                          <label className="mb-2">Total Minutes</label>
+                          <div className="input-group justify-content-center" style={{width: 'auto'}}>
+                            <div className="input-group-prepend">
+                              <span className="input-group-text">
+                                <i className="fa fa-clock-o"></i>
+                              </span>
+                            </div>
+                            <input
+                              type="text"
+                              className="form-control text-center"
+                              style={{ 
+                                width: '100px',
+                                backgroundColor: 'white',
+                                color: 'black'
+                              }}
+                              value={taskRows.reduce((sum, row) => sum + Number(row.minutes || 0), 0)}
+                              readOnly
+                            />
+                          </div>
                         </div>
-                        <div className="col-md-3 text-center">
-                          <label className="d-block text-center">Total Hours</label>
-                          <input
-                            type="text"
-                            className="form-control text-center"
-                            style={{ width: '100px', margin: '0 auto' }}
-                            // value={(selectedTask.rows.reduce((sum, row) => sum + (parseInt(row.minutes) || 0), 0) / 60).toFixed(2)}
-                            value={45 / 60}
-                            readOnly
-                          />
+                        <div className="col-md-3 d-flex flex-column align-items-center">
+                          <label className="mb-2">Total Hours</label>
+                          <div className="input-group justify-content-center" style={{width: 'auto'}}>
+                            <div className="input-group-prepend">
+                              <span className="input-group-text">
+                                <i className="fa fa-clock-o"></i>
+                              </span>
+                            </div>
+                            <input
+                              type="text"
+                              className="form-control text-center"
+                              style={{ 
+                                width: '100px',
+                                backgroundColor: 'white',
+                                color: 'black'
+                              }}
+                              value={(taskRows.reduce((sum, row) => sum + Number(row.minutes || 0), 0) / 60).toFixed(2)}
+                              readOnly
+                            />
+                          </div>
                         </div>
-                        <div className="col-md-3 text-center">
-                          <label className="d-block text-center">Rate per Hour</label>
-                          <input
-                            type="text"
-                            className="form-control text-center"
-                            style={{ width: '100px', margin: '0 auto' }}
-                            value={selectedTask.ratePerHour}
-                            readOnly
-                          />
+                        <div className="col-md-3 d-flex flex-column align-items-center">
+                          <label className="mb-2">Fee per Hour</label>
+                          <div className="input-group justify-content-center" style={{width: 'auto'}}>
+                            <div className="input-group-prepend">
+                              <span className="input-group-text">₹</span>
+                            </div>
+                            <input
+                              type="text"
+                              className="form-control text-center"
+                              style={{ 
+                                width: '100px',
+                                backgroundColor: 'white',
+                                color: 'black'
+                              }}
+                              value={selectedTask.ratePerHour || 500}
+                              readOnly
+                            />
+                          </div>
                         </div>
-                        <div className="col-md-3 text-center">
-                          <label className="d-block text-center">Total Cost</label>
-                          <input
-                            type="text"
-                            className="form-control text-center"
-                            style={{ width: '100px', margin: '0 auto' }}
-                            value={selectedTask.totalCost}
-                            readOnly
-                          />
+                        <div className="col-md-3 d-flex flex-column align-items-center">
+                          <label className="mb-2">Total Fees</label>
+                          <div className="input-group justify-content-center" style={{width: 'auto'}}>
+                            <div className="input-group-prepend">
+                              <span className="input-group-text">₹</span>
+                            </div>
+                            <input
+                              type="text"
+                              className="form-control text-center"
+                              style={{ 
+                                width: '100px',
+                                backgroundColor: 'white',
+                                color: 'black'
+                              }}
+                              value={
+                                ((taskRows.reduce((sum, row) => sum + Number(row.minutes || 0), 0) / 60) * 
+                                (selectedTask.ratePerHour || 500)).toFixed(2)
+                              }
+                              readOnly
+                            />
+                          </div>
                         </div>
                       </div>
                     ) : paymentType === 'lumpsum' ? (
                       <div className="row mb-3">
-                        <div className="col-md-12">
-                          <label>Total Cost</label>
-                          <input 
-                            type="text" 
-                            className="form-control" 
-                            style={{ maxWidth: '150px' }}
-                            value={`₹ ${realTimeCost.totalCost.toFixed(2)}`} 
-                            readOnly 
-                          />
+                        <div className="col-md-9"></div>
+                        <div className="col-md-3 text-center">
+                          <label className="d-block text-center">Total Fees</label>
+                          <div className="input-group justify-content-center" style={{ width: '100px', margin: '0 auto' }}>
+                            <div className="input-group-prepend">
+                              <span className="input-group-text">₹</span>
+                            </div>
+                            <input
+                              type="text"
+                              className="form-control text-center"
+                              style={{
+                               
+                                minWidth: '60px',
+                               
+                              }}
+                              value={`${realTimeCost.totalCost.toFixed(2)}`}
+                              readOnly
+                            />
+                          </div>
                         </div>
                       </div>
                     ) : null}
@@ -1469,6 +1666,15 @@ const AppTaskbar = () => {
                 <div className={`task-modal-container ${viewTaskModalOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
                   <div className="modal-header d-flex justify-content-between align-items-center">
                     <h5 className="modal-title ubuntu-font ubuntu-bold">View Task</h5>
+                    <div className="d-flex align-items-center justify-content-end">
+              <input
+                type="text"
+                className="form-control task-id-input text-center"
+                value={selectedTask.taskId}
+                readOnly
+                style={{ width: '150px',marginLeft:'590px' }}
+              />
+            </div>
                     <button
                       type="button"
                       className="close"
@@ -1481,15 +1687,7 @@ const AppTaskbar = () => {
                   <div className="modal-body ubuntu-font ubuntu-regular">
                     {/* Task Details */}
                     <div className="row mb-3">
-                      <div className="col-md-6">
-                        <label>Task ID</label>
-                        <input
-                          type="text"
-                          className="form-control task-id-input"
-                          value={selectedTask.taskId}
-                          readOnly
-                        />
-                      </div>
+                     
                       <div className="col-md-6">
                         <label>Client</label>
                         <input
@@ -1498,6 +1696,20 @@ const AppTaskbar = () => {
                           value={selectedTask.client}
                           readOnly
                         />
+                      </div>
+                      <div className="col-md-6">
+                        <label>Template</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          value={selectedTask.template || 'Web Design'}
+                          readOnly
+                        />
+                          
+                        
+                        {validationErrors.template && (
+                          <div className="text-danger">Please select a template.</div>
+                        )}
                       </div>
                     </div>
 
@@ -1522,7 +1734,33 @@ const AppTaskbar = () => {
                       </div>
                     </div>
 
-                
+                    <div className="row mb-3">
+                      
+                      <div className="col-md-6">
+                        <label>Assignment Duration</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Enter duration date"
+                          style={{ width: '410px' }}
+                          value={selectedTask.duration ? `${selectedTask.duration} ` : '5/1/2025'}
+                          readOnly
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <label>Payment Type</label>
+                        <div className="d-flex align-items-center">
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={'Pay Per Minute'}
+                            placeholder="Select execution date"
+                            style={{ width: '410px' }}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                    </div>
 
                     {/* Task Rows */}
                     <div className="table-responsive">
@@ -1555,15 +1793,15 @@ const AppTaskbar = () => {
                                 </div>
                               </td>
                               <td style={{ textAlign: 'center' }}>
-                                <ProgressBar 
-                                  now={row.percentage || 0} 
-                                  label={`${(row.percentage || 0)}%`} 
-                                  animated 
+                                <ProgressBar
+                                  now={row.percentage || 0}
+                                  label={`${(row.percentage || 0)}%`}
+                                  animated
                                   variant={
-                                    row.percentage === 0 ? 'danger' : 
-                                    row.percentage < 99 ? 'warning' : 
-                                    'success'
-                                  } 
+                                    row.percentage === 0 ? 'danger' :
+                                      row.percentage < 99 ? 'warning' :
+                                        'success'
+                                  }
                                   labelProps={{ style: { color: 'black', fontWeight: 'bold' } }}
                                   style={{ marginTop: '10px' }}
                                 />
@@ -1578,15 +1816,15 @@ const AppTaskbar = () => {
                     <div className="row mb-3">
                       <div className="col-md-12">
                         <label>Task Progress</label>
-                        <ProgressBar 
-                          now={selectedTask.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / selectedTask.rows.length} 
-                          label={`${(selectedTask.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / selectedTask.rows.length).toFixed(0)}%`} 
-                          animated 
+                        <ProgressBar
+                          now={selectedTask.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / selectedTask.rows.length}
+                          label={`${(selectedTask.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / selectedTask.rows.length).toFixed(0)}%`}
+                          animated
                           variant={
-                            selectedTask.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / selectedTask.rows.length === 0 ? 'danger' : 
-                            selectedTask.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / selectedTask.rows.length < 99 ? 'warning' : 
-                            'success'
-                          } 
+                            selectedTask.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / selectedTask.rows.length === 0 ? 'danger' :
+                              selectedTask.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / selectedTask.rows.length < 99 ? 'warning' :
+                                'success'
+                          }
                           labelProps={{ style: { color: 'black', fontWeight: 'bold' } }}
                           style={{ marginTop: '10px' }}
                         />
@@ -1594,156 +1832,99 @@ const AppTaskbar = () => {
                     </div>
 
                     {/* Calculations Section */}
-                    <div className="row mb-3 d-flex">
-                      <div className="col-md-3 text-center">
-                        <label className="d-block text-center">Total Minutes</label>
-                        <input
-                          type="text"
-                          className="form-control text-center"
-                          style={{ width: '100px', margin: '0 auto' }}
-                          // value={selectedTask.rows.reduce((sum, row) => sum + (parseInt(row.minutes) || 0), 0)}
-                          value={45}
-                          readOnly
-                        />
+                    <div className="row mb-3 d-flex justify-content-center align-items-center text-center">
+                      <div className="col-md-3 d-flex flex-column align-items-center">
+                        <label className="mb-2">Total Minutes</label>
+                        <div className="input-group justify-content-center" style={{width: 'auto'}}>
+                          <div className="input-group-prepend">
+                            <span className="input-group-text">
+                              <i className="fa fa-clock-o"></i>
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            className="form-control text-center"
+                            style={{ 
+                              width: '100px',
+                              backgroundColor: '#e9ecef',
+                              color: 'black',
+                              cursor: 'default'
+                            }}
+                            value={selectedTask.rows.reduce((sum, row) => sum + Number(row.minutes || 0), 0)}
+                            readOnly
+                          />
+                        </div>
                       </div>
-                      <div className="col-md-3 text-center">
-                        <label className="d-block text-center">Total Hours</label>
-                        <input
-                          type="text"
-                          className="form-control text-center"
-                          style={{ width: '100px', margin: '0 auto' }}
-                          // value={(selectedTask.rows.reduce((sum, row) => sum + (parseInt(row.minutes) || 0), 0) / 60).toFixed(2)}
-                          value={45 / 60}
-                          readOnly
-                        />
+                      <div className="col-md-3 d-flex flex-column align-items-center">
+                        <label className="mb-2">Total Hours</label>
+                        <div className="input-group justify-content-center" style={{width: 'auto'}}>
+                          <div className="input-group-prepend">
+                            <span className="input-group-text">
+                              <i className="fa fa-clock-o"></i>
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            className="form-control text-center"
+                            style={{ 
+                              width: '100px',
+                              backgroundColor: '#e9ecef',
+                              color: 'black',
+                              cursor: 'default'
+                            }}
+                            value={(selectedTask.rows.reduce((sum, row) => sum + Number(row.minutes || 0), 0) / 60).toFixed(2)}
+                            readOnly
+                          />
+                        </div>
                       </div>
-                       <div className="col-md-3 text-center">
-                        <label className="d-block text-center">Rate per Hour</label>
-                        <input
-                          type="text"
-                          className="form-control text-center"
-                          style={{ width: '100px', margin: '0 auto' }}
-                          value={selectedTask.ratePerHour}
-                          readOnly
-                        />
+                      <div className="col-md-3 d-flex flex-column align-items-center">
+                        <label className="mb-2">Fee per Hour</label>
+                        <div className="input-group justify-content-center" style={{width: 'auto'}}>
+                          <div className="input-group-prepend">
+                            <span className="input-group-text">₹</span>
+                          </div>
+                          <input
+                            type="text"
+                            className="form-control text-center"
+                            style={{ 
+                              width: '100px',
+                              backgroundColor: '#e9ecef',
+                              color: 'black',
+                              cursor: 'default'
+                            }}
+                            value={selectedTask.ratePerHour || 500}
+                            readOnly
+                          />
+                        </div>
                       </div>
-                      <div className="col-md-3 text-center">
-                        <label className="d-block text-center">Total Cost</label>
-                        <input
-                          type="text"
-                          className="form-control text-center"
-                          style={{ width: '100px', margin: '0 auto' }}
-                          value={selectedTask.totalCost}
-                          readOnly
-                        />
+                      <div className="col-md-3 d-flex flex-column align-items-center">
+                        <label className="mb-2">Total Fees</label>
+                        <div className="input-group justify-content-center" style={{width: 'auto'}}>
+                          <div className="input-group-prepend">
+                            <span className="input-group-text">₹</span>
+                          </div>
+                          <input
+                            type="text"
+                            className="form-control text-center"
+                            style={{ 
+                              width: '100px',
+                              backgroundColor: '#e9ecef',
+                              color: 'black',
+                              cursor: 'default'
+                            }}
+                            value={selectedTask.totalCost || 0}
+                            readOnly
+                          />
+                        </div>
                       </div>
                     </div>
 
-                    {/* Status Change Buttons */}
-                    <div className="row mb-3">
-                      <div className="col-12">
-                        {selectedTask && selectedTask.status === 'created' && (
-                          <div className="d-flex justify-content-between">
-                            <button
-                              className="btn btn-primary mr-2"
-                              style={{
-                                borderRadius: '20px', // Rounded pill shape
-                                padding: '0.25rem 0.75rem',
-                                textTransform: 'uppercase',
-                                fontWeight: '600',
-                                letterSpacing: '0.5px',
-                                border: '2px solid',
-                                transition: 'all 0.3s ease'
-                              }}
-                              onClick={() => {
-                                handleStatusChange(selectedTask.taskId, 'in progress');
-                                setViewTaskModalOpen(false);
-                              }}
-                            >
-                              In Progress
-                            </button>
-                            <button
-                              className="btn btn-success"
-                              style={{
-                                borderRadius: '20px', // Rounded pill shape
-                                padding: '0.25rem 0.75rem',
-                                textTransform: 'uppercase',
-                                fontWeight: '600',
-                                letterSpacing: '0.5px',
-                                border: '2px solid',
-                                transition: 'all 0.3s ease'
-                              }}
-                              onClick={() => {
-                                handleStatusChange(selectedTask.taskId, 'completed');
-                                setViewTaskModalOpen(false);
-                              }}
-                            >
-                              Mark Completed
-                            </button>
-                          </div>
-                        )}
-
-                        {selectedTask && selectedTask.status === 'in progress' && (
-                          <div className="d-flex justify-content-between">
-                            <button
-                              className="btn btn-success"
-                              style={{
-                                borderRadius: '20px', // Rounded pill shape
-                                padding: '0.25rem 0.75rem',
-                                textTransform: 'uppercase',
-                                fontWeight: '600',
-                                letterSpacing: '0.5px',
-                                border: '2px solid',
-                                transition: 'all 0.3s ease'
-                              }}
-                              onClick={() => {
-                                handleStatusChange(selectedTask.taskId, 'completed');
-                                setViewTaskModalOpen(false);
-                              }}
-                            >
-                              Mark Completed
-                            </button>
-                          </div>
-                        )}
-
-                        {selectedTask && selectedTask.status === 'completed' && (
-                          <div className="d-flex justify-content-between">
-                            <button
-                              className="btn btn-primary"
-                              style={{
-                                borderRadius: '20px', // Rounded pill shape
-                                padding: '0.25rem 0.75rem',
-                                textTransform: 'uppercase',
-                                fontWeight: '600',
-                                letterSpacing: '0.5px',
-                                border: '2px solid',
-                                transition: 'all 0.3s ease'
-                              }}
-                              onClick={() => {
-                                handleCreateInvoice(selectedTask.taskId);
-                              }}
-                            >
-                              Create Invoice
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
                   </div>
 
                   <div className="modal-footer">
-                    <button
+                  <button
                       type="button"
-                      className="btn btn-secondary mr-2"
-                      style={{
-                        borderRadius: '20px', // Rounded pill shape
-                        padding: '0.25rem 0.75rem',
-                        textTransform: 'uppercase',
-                        fontWeight: '600',
-                        letterSpacing: '0.5px',
-                        border: '2px solid',
-                        transition: 'all 0.3s ease'
-                      }}
+                      className="btn btn-primary"
                       onClick={() => setViewTaskModalOpen(false)}
                     >
                       Close
@@ -1755,8 +1936,14 @@ const AppTaskbar = () => {
           </div>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 };
 
-export default AppTaskbar;
+const mapStateToProps = ({ UIElementsReducer }) => ({
+  notifyData: UIElementsReducer.notifyData,
+  notifyGeneralInfo: UIElementsReducer.notifyGeneralInfo
+});
+
+export default connect(mapStateToProps, { notifyGeneralInfo })(AppTaskbar);

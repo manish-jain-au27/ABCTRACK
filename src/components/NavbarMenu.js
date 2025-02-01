@@ -612,12 +612,12 @@ class NavbarMenu extends React.Component {
                       <ul className="collapse">
                         <li className={activeKey === "/pendingreviews" ? "active" : ""}>
                           <Link to="/pendingreviews">
-                            <i className="fa fa-clock me-2"></i>Pending Reviews
+                            Pending Reviews
                           </Link>
                         </li>
                         <li className={activeKey === "/completedreviews" ? "active" : ""}>
                           <Link to="/completedreviews">
-                            <i className="fa fa-check-circle me-2"></i>Completed Reviews
+                            Completed Reviews
                           </Link>
                         </li>
                       </ul>

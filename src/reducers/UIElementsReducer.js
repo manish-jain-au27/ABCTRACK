@@ -40,12 +40,6 @@ const initialState = {
   ],
   notifyData1: [
     {
-      type: "info",
-      position: "bottom-right",
-      dialogText: "this is General theme info",
-      show: true,
-    },
-    {
       type: "success",
       position: "bottom-right",
       dialogText: "this is Success theme info",
@@ -61,12 +55,6 @@ const initialState = {
       type: "error",
       position: "bottom-right",
       dialogText: "this is Error theme info",
-      show: true,
-    },
-    {
-      type: "info",
-      position: "bottom-right",
-      dialogText: "Hi I'm Here",
       show: true,
     },
     {
@@ -87,7 +75,6 @@ const initialState = {
       dialogText: "Hi I'm Here",
       show: true,
     },
-
     {
       type: "info",
       position: "top-full-width",
@@ -97,18 +84,6 @@ const initialState = {
     {
       type: "info",
       position: "bottom-full-width",
-      dialogText: "Hi I'm Here",
-      show: true,
-    },
-    {
-      type: "info",
-      position: "top-center",
-      dialogText: "Hi I'm Here",
-      show: true,
-    },
-    {
-      type: "info",
-      position: "bottom-center",
       dialogText: "Hi I'm Here",
       show: true,
     },

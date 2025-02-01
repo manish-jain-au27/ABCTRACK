@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Form, Modal, Row, Col, Alert, Badge } from 'react-bootstrap';
+import { Card, Button, Form, Modal, Row, Col, Alert, Badge, ProgressBar } from 'react-bootstrap';
 import PageHeader from "../../components/PageHeader";
-import DataTable from "react-data-table-component";
+import CustomTable from '../../components/customUI/CustomTable';
 import Rating from 'react-rating-stars-component';
-
+import { Link } from 'react-router-dom';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 const PendingReviews = () => {
   const [loading, setLoading] = useState(false);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showEntityModal, setShowEntityModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [selectedTask, setSelectedTask] = useState(null);
+  const [selectedTask, setSelectedTask] = useState({
+    entity: '',
+    template: ''
+  });
   const [rating, setRating] = useState(0);
   const [price, setPrice] = useState('');
   const [remarks, setRemarks] = useState('');
@@ -20,6 +25,11 @@ const PendingReviews = () => {
   const [completedTasks, setCompletedTasks] = useState([]);
   const [selectedField, setSelectedField] = useState('');
   const [selectedSkill, setSelectedSkill] = useState('');
+  const [validationErrors, setValidationErrors] = useState({
+    entity: false,
+    template: false
+  });
+  const [reviewDate, setReviewDate] = useState(null);
 
   // Mock data for pending tasks
   const mockTasks = [
@@ -30,6 +40,8 @@ const PendingReviews = () => {
       category: 'Finance',
       subcategory: 'Reports',
       client: 'ABC Corp',
+      paymentType: 'pay per Minute',
+      totalCost:'2000',
       status: 'pending',
       subtaskDetails: {
         title: 'Q4 Analysis',
@@ -37,7 +49,17 @@ const PendingReviews = () => {
         status: 'pending'
       },
       ratePerHour: '2500',
-      details: 'Comprehensive analysis of Q4 financial statements'
+      details: 'Comprehensive analysis of Q4 financial statements',
+      executionType: '',
+      executionMode: '',
+      rows: [
+        {
+          title: 'Review',
+          review: 0,
+          rate: '2000',
+          remarks: ''
+        }
+      ]
     },
     {
       id: 2,
@@ -46,6 +68,8 @@ const PendingReviews = () => {
       category: 'Development',
       subcategory: 'Frontend',
       client: 'XYZ Tech',
+      paymentType: 'lumpsum',
+      totalCost:'3000',
       status: 'pending',
       subtaskDetails: {
         title: 'Homepage Design',
@@ -53,7 +77,17 @@ const PendingReviews = () => {
         status: 'pending'
       },
       ratePerHour: '3000',
-      details: 'Modern responsive homepage design'
+      details: 'Modern responsive homepage design',
+      executionType: '',
+      executionMode: '',
+      rows: [
+        {
+          title: 'Review',
+          review: 0,
+          rate: '2000',
+          remarks: ''
+        }
+      ]
     },
     {
       id: 3,
@@ -62,6 +96,8 @@ const PendingReviews = () => {
       category: 'Marketing',
       subcategory: 'Digital',
       client: 'Global Retail',
+      paymentType: 'lumpsum',
+      totalCost:'4000',
       status: 'pending',
       subtaskDetails: {
         title: 'Social Media Plan',
@@ -69,7 +105,17 @@ const PendingReviews = () => {
         status: 'pending'
       },
       ratePerHour: '2000',
-      details: 'Social media marketing strategy'
+      details: 'Social media marketing strategy',
+      executionType: '',
+      executionMode: '',
+      rows: [
+        {
+          title: 'Review',
+          review: 0,
+          rate: '2000',
+          remarks: ''
+        }
+      ]
     }
   ];
 
@@ -99,6 +145,44 @@ const PendingReviews = () => {
     { id: 4, name: "Analysis" }
   ];
 
+  const EXECUTION_TYPES = [
+    {
+      id: 1,
+      name: 'Type 1',
+      modes: [
+        { id: 1, name: 'Mode 1' },
+        { id: 2, name: 'Mode 2' }
+      ]
+    },
+    {
+      id: 2,
+      name: 'Type 2',
+      modes: [
+        { id: 3, name: 'Mode 3' },
+        { id: 4, name: 'Mode 4' }
+      ]
+    }
+  ];
+
+  const ENTITIES = [
+    {
+      id: 'company',
+      name: 'Company',
+      templates: [
+        { id: 'standard', name: 'Standard Company Template' },
+        { id: 'startup', name: 'Startup Company Template' }
+      ]
+    },
+    {
+      id: 'individual',
+      name: 'Individual',
+      templates: [
+        { id: 'freelance', name: 'Freelance Template' },
+        { id: 'consultant', name: 'Consultant Template' }
+      ]
+    }
+  ] || [];
+
   const handleReviewClick = (task) => {
     setSelectedTask(task);
     setPrice(task.ratePerHour);
@@ -120,56 +204,6 @@ const PendingReviews = () => {
     {
       name: 'Subtask',
       selector: row => row.subtaskDetails.title,
-    },
-    {
-      name: 'Status',
-      cell: row => {
-        // Determine status color and style
-        const getStatusStyle = (status) => {
-          switch(status.toLowerCase()) {
-            case 'pending':
-              return {
-                backgroundColor: '#dc3545', // Bootstrap danger red
-                color: 'white',
-                borderColor: '#dc3545'
-              };
-            case 'in progress':
-              return {
-                backgroundColor: '#ffc107', // Bootstrap warning yellow
-                color: 'black',
-                borderColor: '#ffc107'
-              };
-            case 'completed':
-              return {
-                backgroundColor: '#28a745', // Bootstrap success green
-                color: 'white',
-                borderColor: '#28a745'
-              };
-            default:
-              return {
-                backgroundColor: '#6c757d', // Bootstrap secondary gray
-                color: 'white',
-                borderColor: '#6c757d'
-              };
-          }
-        };
-
-        const statusStyle = getStatusStyle(row.status);
-
-        return (
-          <span 
-            className="badge rounded-pill text-uppercase fw-bold px-3 py-2"
-            style={{
-              backgroundColor: statusStyle.backgroundColor,
-              color: statusStyle.color,
-              border: `1px solid ${statusStyle.borderColor}`
-            }}
-          >
-            {row.status}
-          </span>
-        );
-      },
-      sortable: true,
     },
     {
       name: 'Minutes',
@@ -433,7 +467,7 @@ const PendingReviews = () => {
                     >
                       <Card.Body className="text-center">
                         <Card.Title className="mb-2">{template.name}</Card.Title>
-                        <p className="text-muted small">Click to select this template</p>
+                        <p className="text-muted small">Click to select Invoice template</p>
                       </Card.Body>
                     </Card>
                   </Col>
@@ -441,7 +475,7 @@ const PendingReviews = () => {
               </Row>
             ) : selectedEntity && selectedTemplate ? (
               <Alert variant="success" className="text-center">
-                Template "{templates.find(template => template.id === selectedTemplate)?.name || 'Selected Template'}" has been selected. 
+                Invoice Template "{templates.find(template => template.id === selectedTemplate)?.name || 'Selected Template'}" has been selected. 
                 You can now start the review.
               </Alert>
             ) : (
@@ -474,212 +508,520 @@ const PendingReviews = () => {
     </Modal>
   );
 
-  const renderTaskModal = () => (
-    <Modal 
-      show={showTaskModal} 
-      onHide={() => setShowTaskModal(false)}
-      size="lg"
-      centered
-    >
-      <Modal.Header closeButton className="border-bottom-0 pb-0">
-        <Modal.Title className="text-secondary">Task Review</Modal.Title>
-      </Modal.Header>
-      <Modal.Body className="p-4">
-        <Row className="g-4">
-          <Col md={6}>
-            <Card border="light" className="shadow-sm h-100">
-              <Card.Header className="bg-light py-2">
-                <h6 className="mb-0 text-muted">Task Overview</h6>
-              </Card.Header>
-              <Card.Body>
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="text-muted">Title:</span>
-                  <strong>{selectedTask?.title || 'N/A'}</strong>
-                </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="text-muted">Category:</span>
-                  <strong>{selectedTask?.category || 'N/A'}</strong>
-                </div>
-                <div className="d-flex justify-content-between mb-2">
-                  <span className="text-muted">Client:</span>
-                  <strong>{selectedTask?.client || 'N/A'}</strong>
-                </div>
-                <div className="d-flex justify-content-between">
-                  <span className="text-muted">Rate per Hour:</span>
-                  <strong>₹{selectedTask?.ratePerHour || 'N/A'}</strong>
-                </div>
-                <div className="d-flex justify-content-between mt-2">
-                  <span className="text-muted">Total Amount:</span>
-                  <strong className="text-success">
-                    ₹{(selectedTask?.ratePerHour * (selectedTask?.subtaskDetails?.minutes / 60)).toFixed(2) || 'N/A'}
-                  </strong>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-          <Col md={6}>
-            <Card border="light" className="shadow-sm h-100">
-              <Card.Header className="bg-light py-2">
-                <h6 className="mb-0 text-muted">Sub Task Details</h6>
-              </Card.Header>
-              <Card.Body>
-                <p className="text-muted fst-italic mb-0">
-                  {selectedTask?.details || 'No additional details available.'}
-                </p>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+  const modalStyles = `
+    .task-modal-container {
+      position: fixed;
+      top: 0;
+      right: -500px;
+      width: 60vw;
+      height: 100vh;
+      background-color: white;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+      transition: right 0.3s ease-in-out;
+      z-index: 1050;
+      overflow-y: auto;
+      padding: 0px;
+    }
+    .task-modal-container.open {
+      right: 0;
+    }
+    .task-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      z-index: 1040;
+      display: none;
+    }
+    .task-modal-overlay.open {
+      display: block;
+    }
+    /* New CSS to reduce task ID input box size */
+    .task-id-input {
+      max-width: 120px;
+      padding: 5px;
+      font-size: 0.9em;
+    }
+  `;
 
-        <Card border="light" className="shadow-sm mt-4">
-          <Card.Header className="bg-light py-2">
-            <h6 className="mb-0 text-muted">Review Information</h6>
-          </Card.Header>
-          <Card.Body>
-            <Row>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="text-muted">Enter Amount</Form.Label>
-                  <Form.Control 
-                    type="number" 
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    placeholder="Enter total amount"
-                    size="sm"
-                    min="0"
-                    step="0.01"
-                  />
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="text-muted">Rating</Form.Label>
-                  <div className="d-flex align-items-center">
-                    <div className="d-flex">
-                      {[...Array(10)].map((star, index) => {
-                        const ratingValue = index + 1;
+  const handleReviewDateChange = (date) => {
+    setReviewDate(date);
+    setSelectedTask(prevTask => ({
+      ...prevTask,
+      reviewDate: date ? date.toISOString().split('T')[0] : null
+    }));
+  };
+
+  const renderTaskModal = (task) => {
+    const safeEntities = ENTITIES || [];
+
+    return (
+      <>
+        <style>{modalStyles}</style>
+        
+        <div 
+          className={`task-modal-overlay ${showTaskModal ? 'open' : ''}`}
+          onClick={() => setShowTaskModal(false)}
+        >
+          <div 
+            className={`task-modal-container ${showTaskModal ? 'open' : ''}`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header d-flex justify-content-between align-items-center p-3 border-bottom">
+              <h5 className="modal-title ubuntu-font ubuntu-bold mb-0">Task Review</h5>
+              <div className="d-flex align-items-center">
+                <input
+                  type="text"
+                  className="form-control task-id-input text-center mr-2"
+                  value={task?.taskId || 'N/A'}
+                  readOnly
+                />
+                <button
+                  type="button"
+                  className="close"
+                  onClick={() => setShowTaskModal(false)}
+                  style={{ 
+                    background: 'none', 
+                    border: 'none', 
+                    fontSize: '1.5rem', 
+                    lineHeight: 1,
+                    color: '#000',
+                    opacity: 0.5,
+                    cursor: 'pointer'
+                  }}
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+            
+            {task && (
+              <div className="modal-body ubuntu-font ubuntu-regular">
+                <div className="row mb-3">
+                  <div className="col-md-5">
+                    <label>Client</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={task.client || 'N/A'}
+                      style={{
+                        width:'415px'
+                      }}
+                      readOnly
+                    />
+                  </div>
+                  <div 
+                    className="col-md-5"
+                    style={{
+                      marginLeft: '75px'
+                    }}
+                  >
+                    <label className="font-weight-bold">Task Title</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={task.title || 'N/A'}
+                      style={{
+                        width:'415px'
+                      }}
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+                <div className="row mb-3">
+                  <div className="col-md-6">
+                    <label>Task Category</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={task.category || 'N/A'}
+                      readOnly
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label>Subcategory</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={task.subcategory || 'N/A'}
+                      readOnly
+                    />
+                  </div>
+                </div>
+
+
+                <div className="row mb-3">
+                 
+                  <div className="col-md-6">
+                    <label>Assignment Duration</label>
+                    <div className="input-group">
+                      <span className="input-group-text" style={{ background: '#f0f0f0', border: 'none' }}>
+                        <i className="fa fa-calendar" style={{ color: '#6c757d' }}></i>
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={task.planDate || '05/01/2025'}
+                        placeholder="Plan Date"
+                        style={{ 
+                          backgroundColor: '#f0f0f0',
+                          color: 'black',
+                          cursor: 'default'
+                        }}
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                        <label>Payment Type</label>
+                        <div className="d-flex align-items-center">
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={'Pay Per Minute'}
+                            placeholder="Select execution date"
+                            style={{ width: '410px' }}
+                            readOnly
+                          />
+                        </div>
+                      </div>
+                </div>
+                <div className="row mb-3">
+                <div className="col-md-6">
+                    <label>Execution Date</label>
+                    <div className="input-group">
+                      <span className="input-group-text" style={{ background: '#f0f0f0', border: 'none' }}>
+                        <i className="fa fa-calendar" style={{ color: '#6c757d' }}></i>
+                      </span>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={task.executionDate || '05/01/2025'}
+                        placeholder="Execution Date"
+                        style={{ 
+                          backgroundColor: '#f0f0f0',
+                          color: 'black',
+                          cursor: 'default'
+                        }}
+                        readOnly
+                      />
+                    </div>
+                  </div>
+             <div className="col-md-6">
+               <div className="row">
+                 <div className="col-md-6 mb-2">
+                   <label>Execution Minutes</label>
+                   <div className="input-group">
+                     <span className="input-group-text" style={{ background: '#f0f0f0', border: 'none' }}>
+                       <i className="fa fa-clock-o" style={{ color: '#6c757d' }}></i>
+                     </span>
+                     <input
+                       type="text"
+                       className="form-control"
+                       value={
+                         task.totalMinutes 
+                         ? `${task.totalMinutes} ` 
+                         : (task.subtasks 
+                           ? `${task.subtasks.reduce((sum, subtask) => sum + (subtask.minutes || 0), 0)}`
+                           : '120')
+                       }
+                       placeholder="Total Minutes"
+                       style={{ 
+                         backgroundColor: '#f0f0f0',
+                         color: 'black',
+                         cursor: 'not-allowed'
+                       }}
+                       readOnly
+                     />
+                   </div>
+                 </div>
+                 <div className="col-md-6 mb-2">
+                   <label>Plan Minutes</label>
+                   <div className="input-group">
+                     <span className="input-group-text" style={{ background: '#f0f0f0', border: 'none' }}>
+                       <i className="fa fa-clock-o" style={{ color: '#6c757d' }}></i>
+                     </span>
+                     <input
+                       type="text"
+                       className="form-control"
+                       value={
+                         task.plannedMinutes 
+                         ? `${task.plannedMinutes}` 
+                         : '60'
+                       }
+                       placeholder="Planned Minutes"
+                       style={{ 
+                         backgroundColor: '#f0f0f0',
+                         color: 'black',
+                         cursor: 'not-allowed'
+                       }}
+                       readOnly
+                     />
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+                <div className="table-responsive">
+                  <table className="table table-bordered text-center">
+                    <thead className="thead-white" style={{ color: 'black', backgroundColor: 'white' }}>
+                      <tr>
+                        <th className="text-center" style={{ width: '200px' }}>Reviews</th>
+                        <th className="text-center"style={{ width: '80px' }}>Total Fee</th>
+                        <th className="text-center" style={{ width: '80px' }}>Final Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(task?.rows || []).map((row, index) => {
                         return (
-                          <span 
-                            key={index} 
-                            onClick={() => setRating(ratingValue)}
-                            style={{
-                              color: ratingValue <= rating ? '#ffd700' : '#e4e5e9',
-                              cursor: 'pointer',
-                              fontSize: '24px',
-                              marginRight: '5px'
-                            }}
-                          >
-                            ★
-                          </span>
+                          <tr key={index} className="text-center">
+                            <td>
+                              {row.title}
+                              <div className="mt-2 d-flex justify-content-center">
+                                <Rating
+                                  count={10}
+                                  value={row.review || 0}
+                                  size={35}
+                                  activeColor="#ffd700"
+                                  onChange={(newRating) => {
+                                    setSelectedTask(prev => {
+                                      const updatedRows = [...(prev.rows || [])];
+                                      updatedRows[index] = {
+                                        ...updatedRows[index],
+                                        review: newRating
+                                      };
+                                      return { ...prev, rows: updatedRows };
+                                    });
+                                  }}
+                                />
+                              </div>
+                            </td>
+                            <td>
+                              <div className="input-group">
+                                <div className="input-group-prepend">
+                                  <span className="input-group-text">₹</span>
+                                </div>
+                                <input
+                                  type="text"
+                                  className="form-control text-center"
+                                  value={row.rate || '2000'}
+                                  readOnly
+                                  placeholder="Rate"
+                                />
+                              </div>
+                            </td>
+                            <td>
+                              <div className="input-group">
+                                <div className="input-group-prepend">
+                                  <span className="input-group-text">₹</span>
+                                </div>
+                                <input
+                                  type="number"
+                                  className="form-control text-center"
+                                  value={row.rate || ''}
+                                  onChange={(e) => {
+                                    const newRate = e.target.value;
+                                    setSelectedTask(prev => {
+                                      const updatedRows = [...(prev.rows || [])];
+                                      updatedRows[index] = {
+                                        ...updatedRows[index],
+                                        rate: newRate
+                                      };
+                                      return { ...prev, rows: updatedRows };
+                                    });
+                                  }}
+                                  placeholder="Final Price"
+                                />
+                              </div>
+                            </td>
+                          </tr>
                         );
                       })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="row mb-3">
+                  <div className="col-md-6">
+                    <label>Remark</label>
+                    <textarea
+                      className="form-control"
+                      rows="3"
+                      placeholder="Enter your remarks"
+                      value={task.remark || ''}
+                      onChange={(e) => {
+                        setSelectedTask(prevTask => ({
+                          ...prevTask,
+                          remark: e.target.value
+                        }));
+                      }}
+                      style={{ 
+                        width: '100%', 
+                        backgroundColor: 'white',
+                        resize: 'vertical'
+                      }}
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label>Review Date</label>
+                    <div className="position-relative">
+                      <DatePicker
+                        selected={reviewDate}
+                        onChange={handleReviewDateChange}
+                        placeholderText="Select review date"
+                        dateFormat="MM-dd-YYYY"
+                        className="form-control"
+                        wrapperClassName="w-100"
+                        // customInput={
+                        //   <div className="input-group">
+                        //     <input
+                        //       type="text"
+                        //       className="form-control"
+                        //       value={reviewDate ? reviewDate.toLocaleDateString() : ''}
+                        //       placeholder="MM/DD/YYYY"
+                        //       readOnly
+                        //     />
+                        //     <div className="input-group-append">
+                        //       <span 
+                        //         className="input-group-text position-absolute" 
+                        //         style={{
+                        //           right: '10px', 
+                        //           top: '50%', 
+                        //           transform: 'translateY(-50%)', 
+                        //           zIndex: 10,
+                        //           backgroundColor: 'transparent',
+                        //           border: 'none'
+                        //         }}
+                        //       >
+                        //         <i 
+                        //           className="fa fa-calendar" 
+                        //           style={{ 
+                        //             cursor: 'pointer', 
+                        //             color: '#6c757d' 
+                        //           }} 
+                        //         />
+                        //       </span>
+                        //     </div>
+                        //   </div>
+                        // }
+                      />
                     </div>
-                    {rating > 0 && (
-                      <Badge bg="secondary" className="ms-2">
-                        {rating} / 10
-                      </Badge>
+                    {validationErrors.reviewDate && (
+                      <div className="text-danger">Please select a valid review date.</div>
                     )}
                   </div>
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row>
-              <Col md={12}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="text-muted">Remarks</Form.Label>
-                  <Form.Control 
-                    as="textarea" 
-                    rows={4} 
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Enter detailed remarks about task performance..."
-                    size="sm"
-                    className="mb-3"
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row>
-              <Col md={12}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="text-muted mb-2">Select Entity</Form.Label>
-                  <Form.Select 
-                    value={selectedEntity} 
-                    onChange={(e) => setSelectedEntity(e.target.value)}
-                    size="sm"
-                    className={`examples--dropdown ${!selectedEntity ? 'is-invalid' : ''}`}
-                    required
-                  >
-                    <option value="" disabled>Choose Entity</option>
-                    {entities.map(entity => (
-                      <option key={entity.id} value={entity.id}>
-                        {entity.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                  {!selectedEntity && (
-                    <Form.Control.Feedback type="invalid" className="d-block">
-                      Please select an entity
-                    </Form.Control.Feedback>
-                  )}
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row className="mt-3">
-              <Col md={12}>
-                <Form.Group className="mb-3">
-                  <Form.Label className="text-muted mb-2">
-                    Select Template
-                    <span className="text-danger ms-1">*</span>
-                  </Form.Label>
-                  <Form.Select 
-                    value={selectedTemplate} 
-                    onChange={(e) => setSelectedTemplate(e.target.value)}
-                    size="sm"
-                    className={`examples--dropdown ${!selectedTemplate ? 'is-invalid' : ''}`}
-                    required
-                  >
-                    <option value="" disabled>Choose Template</option>
-                    {templates.map(template => (
-                      <option key={template.id} value={template.id}>
-                        {template.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                  {!selectedTemplate && (
-                    <div className="invalid-feedback d-block">
-                      Please select a review template
+                </div>
+                <div className="row mb-3">
+                  <div className="col-md-6">
+                    <label>Entity</label>
+                    <select
+                      name="entity"
+                      className="form-control"
+                      value={task.entity || ''}
+                      onChange={(e) => {
+                        const entity = e.target.value;
+                        setSelectedTask(prev => ({
+                          ...prev,
+                          entity,
+                          template: '' // Reset template when entity changes
+                        }));
+                        setValidationErrors(prev => ({ ...prev, entity: false }));
+                      }}
+                      required
+                    >
+                      <option value="">Select Entity</option>
+                      {safeEntities.map(entity => (
+                        <option key={entity.id} value={entity.id}>
+                          {entity.name}
+                        </option>
+                      ))}
+                    </select>
+                    {validationErrors.entity && (
+                      <div className="text-danger">Please select an entity.</div>
+                    )}
+                  </div>
+                  <div className="col-md-6">
+                    <label>Invoice Templates</label>
+                    <div className="d-flex align-items-center">
+                      <select
+                        name="template"
+                        className="form-control flex-grow-1"
+                        value={task.template || ''}
+                        onChange={(e) => {
+                          const template = e.target.value;
+                          setSelectedTask(prev => ({
+                            ...prev,
+                            template
+                          }));
+                          setValidationErrors(prev => ({ ...prev, template: false }));
+                        }}
+                        disabled={!task.entity}
+                        required
+                      >
+                        <option value="">Select Invoice Template</option>
+                        {task.entity && 
+                          safeEntities.find(entity => entity.id === task.entity)?.templates?.map(template => (
+                            <option key={template.id} value={template.id}>
+                              {template.name}
+                            </option>
+                          ))
+                        }
+                      </select>
+                      <Link 
+                        to="#" 
+                        className="btn btn-outline-info btn-sm ml-2" 
+                        onClick={() => {
+                          // Optional: Add functionality when eye icon is clicked
+                          // For example, preview the selected template
+                        }}
+                      >
+                        <i className="icon-eye"></i>
+                      </Link>
                     </div>
-                  )}
-                </Form.Group>
-              </Col>
-            </Row>
-            <Row className="mt-3">
-              <Col md={12}>
-                <Button 
-                  variant="primary" 
-                  onClick={handleSubmitReview}
-                  className="w-100"
-                  disabled={!selectedTemplate || !selectedEntity || rating === 0}
-                >
-                  Submit Review
-                </Button>
-              </Col>
-            </Row>
-          </Card.Body>
-        </Card>
-      </Modal.Body>
-      <Modal.Footer className="border-top-0 pt-0">
-        <Button 
-          variant="outline-secondary" 
-          onClick={() => setShowTaskModal(false)}
-          className="px-3"
-        >
-          Cancel
-        </Button>
-      </Modal.Footer>
-    </Modal>
-  );
+                    {validationErrors.template && (
+                      <div className="text-danger">Please select a invoice template.</div>
+                    )}
+                  </div>
+                </div>
+             
+                <div className="modal-footer">
+                   
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={() => {
+                        // Perform any validation or data processing if needed
+                        setShowTaskModal(false);
+                      }}
+                    >
+                      Submit
+                    </button>
+                  </div>
+              </div>
+              
+            )}
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  // Transform tasks to match CustomTable's expected structure
+  const transformedTasks = completedTasks.map(task => ({
+    ...task,
+    status: task.status, // Explicitly add status
+    rows: [{
+      minutes: task.subtaskDetails?.minutes || 0,
+      percentage: task.status === 'pending' ? 0 : 
+                  task.status === 'in progress' ? 50 : 100,
+      status: task.status,
+      statusText: task.status, // Add explicit status text
+      statusVariant: task.status === 'pending' ? 'danger' : 
+                     task.status === 'in progress' ? 'warning' : 'success'
+    }]
+  }));
 
   return (
     <div>
@@ -693,19 +1035,35 @@ const PendingReviews = () => {
       
       <Card>
         <Card.Body>
-          <DataTable
-            title="Pending Tasks for Review"
-            columns={columns}
-            data={completedTasks}
-            progressPending={loading}
-            pagination
-            highlightOnHover
-            striped
+          <CustomTable 
+            title=""
+            headers={[
+              { key: 'taskId', label: 'Task ID', sortable: true },
+              { key: 'client', label: 'Client', sortable: true },
+              { key: 'title', label: 'Title', sortable: true },
+              { key: 'category', label: 'Category', sortable: true },
+              { key: 'paymentType', label: 'Payment Type', sortable: true },
+              { key: 'totalCost', label: 'Assignment Value', sortable: true },
+              { key: 'action', label: 'Action' }
+            ]}
+            rows={transformedTasks}
+            onRowAction={handleReviewClick}
+            renderActionColumn={(task) => (
+              <div className="d-flex justify-content-center">
+                <Link 
+                  to="#" 
+                  className="btn btn-outline-info btn-sm mr-1" 
+                  onClick={() => handleReviewClick(task)}
+                >
+                  <i className="icon-eye"></i>
+                </Link>
+              </div>
+            )}
           />
         </Card.Body>
       </Card>
 
-      {renderTaskModal()}
+      {renderTaskModal(selectedTask)}
       
       {renderEntityModal()}
     </div>

@@ -636,25 +636,21 @@ class NavbarMenu extends React.Component {
                       <ul className="collapse">
                         <li className={activeKey === "/allinvoices" ? "active" : ""}>
                           <Link to="/allinvoices">
-                            <i className="fa fa-file-invoice me-2"></i>
                             All Invoices
                           </Link>
                         </li>
                         <li className={activeKey === "/pendingpayments" ? "active" : ""}>
                           <Link to="/pendingpayments">
-                            <i className="fa fa-clock me-2"></i>
                             Pending Payments
                           </Link>
                         </li>
                         <li className={activeKey === "/completedpayments" ? "active" : ""}>
                           <Link to="/completedpayments">
-                            <i className="fa fa-check-circle me-2"></i>
                             Completed Payments
                           </Link>
                         </li>
                         <li className={activeKey === "/paymenthistory" ? "active" : ""}>
                           <Link to="/paymenthistory">
-                            <i className="fa fa-history me-2"></i>
                             Payment History
                           </Link>
                         </li>

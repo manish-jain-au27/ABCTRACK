@@ -275,7 +275,7 @@ body {
                     color: $theme-darkfont;
                 }
             }
-        }
+		}
 		.nav-tabs{
             > li > a {
 				&.active,
@@ -373,6 +373,7 @@ body {
 		}
 	}
 }
+
 a {
     color: inherit;
 	&:hover,
@@ -574,4 +575,12 @@ footer {
 	-ms-background-size: 60px 60px;
 	background-size: 60px 60px;
 	background-position: 0 0, 30px 30px;
+}
+
+.row {
+    margin-right: 0;
+    margin-left: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
 }

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Table, Badge, Row, Col, Card, Form, Alert, ProgressBar } from 'react-bootstrap';
+import { Button, Badge, Row, Col, Card, Form, Alert, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import CustomTable from '../../components/customUI/CustomTable';
+import PageHeader from "../../components/PageHeader";
 
 const CompletedTasks = () => {
   // State variables
@@ -333,8 +334,8 @@ const CompletedTasks = () => {
                   </div>
              <div className="col-md-6">
                <div className="row">
-                 <div className="col-md-6 mb-2">
-                   <label>Execution Minutes</label>
+                 <div className="col-md-6 mb-2 pl-0">
+                   <label className="ml">Execution Minutes</label>
                    <div className="input-group">
                      <span className="input-group-text" style={{ background: '#f0f0f0', border: 'none' }}>
                        <i className="fa fa-clock-o" style={{ color: '#6c757d' }}></i>
@@ -359,8 +360,8 @@ const CompletedTasks = () => {
                      />
                    </div>
                  </div>
-                 <div className="col-md-6 mb-2">
-                   <label>Plan Minutes</label>
+                 <div className="col-md-6 mb-2 pr-0">
+                   <label className="mr">Plan Minutes</label>
                    <div className="input-group">
                      <span className="input-group-text" style={{ background: '#f0f0f0', border: 'none' }}>
                        <i className="fa fa-clock-o" style={{ color: '#6c757d' }}></i>
@@ -550,84 +551,23 @@ const CompletedTasks = () => {
   };
 
   return (
-    <div className="container-fluid">
-      <div className="block-header">
-        <div className="row clearfix">
-          <div className="col-lg-4 col-md-12 col-sm-12">
-            <h2>Completed Tasks</h2>
-          </div>
-        </div>
-      </div>
+    <div>
+      {/* Page Header */}
+      <PageHeader 
+        HeaderText="Completed Tasks"
+        Breadcrumb={[
+          { name: 'Tasks', navigate: '/tasks' },
+          { name: 'Completed Tasks' }
+        ]}
+      />
       
-      {loading ? (
-        <div className="text-center">Loading...</div>
-      ) : completedTasks.length > 0 ? (
-        <div className="row clearfix">
-          <div className="col-lg-12">
-            <div className="card">
-              <div className="body">
-                <div className="row mb-3 align-items-center">
-                  <div className="col-md-6">
-                    <div className="input-group" style={{ width: '50%' }}>
-                      <input
-                        type="text"
-                        className="form-control"
-                        placeholder="Search tasks..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="table-responsive">
-                  <table className="table table-hover m-b-0">
-                    <thead className="thead-theme theme-bg-primary text-center">
-                      <tr className="text-center">
-                        <th className="text-center" onClick={() => handleSort('taskId')}>Task ID {getSortIcon('taskId')}</th>
-                        <th className="text-center" onClick={() => handleSort('client')}>Client {getSortIcon('client')}</th>
-
-                        <th className="text-center" onClick={() => handleSort('title')}>Title {getSortIcon('title')}</th>
-                        <th className="text-center" onClick={() => handleSort('category')}>Category {getSortIcon('category')}</th>
-                        <th className="text-center" onClick={() => handleSort('totalMinutes')}>Payment Type {getSortIcon('paymentType')}</th>
-                        <th className="text-center" onClick={() => handleSort('totalMinutes')}>Assignment Value {getSortIcon('totalCost')}</th>
-                        <th className="text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="text-center">
-                      {sortedAndFilteredTaskRows.map((task) => (
-                        <tr key={task.taskId} className="text-center">
-                          <td className="text-center">{task.taskId}</td>
-                          <td className="text-center">{task.client || 'N/A'}</td>
-                          <td className="text-center">{task.title}</td>
-                           <td className="text-center">{task.category || 'N/A'}</td>
-                           <td className="text-center">{task.paymentType || 'N/A'}</td>
-                           <td className="text-center">{task.totalCost || 'N/A'}</td>
-                         
-                          <td className="text-center">
-                            <Link 
-                              to="#" 
-                              className="btn btn-outline-info mr-1" 
-                              onClick={(e) => {
-                                e.preventDefault(); 
-                                handleViewTask(task);
-                              }}
-                            >
-                              <i className="icon-eye"></i>
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="text-center">No completed tasks found</div>
-      )}
+      <CustomTable 
+        title=""
+        rows={sortedAndFilteredTaskRows}
+        onRowAction={(task) => {
+          handleViewTask(task);
+        }}
+      />
 
       {isModalOpen && selectedTask && (
         <TaskDetailsModal 

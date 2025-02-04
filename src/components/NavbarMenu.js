@@ -581,6 +581,11 @@ class NavbarMenu extends React.Component {
                         <i className="fa fa-tasks"></i> <span>Task</span>
                       </a>
                       <ul className="collapse">
+                      <li
+                          className={activeKey === "createtask" ? "active" : ""}
+                        >
+                          <Link to="createtask">Create Task</Link>
+                        </li>
                         <li
                           className={activeKey === "apptaskbar" ? "active" : ""}
                         >

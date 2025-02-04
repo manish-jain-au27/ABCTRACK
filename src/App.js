@@ -13,7 +13,8 @@ import appContact from "./screens/App/Contact";
 import AppTaskbar from "./screens/App/Taskbar";
 import PendingTasks from "./screens/App/PendingTasks";
 import CompletedTasks from "./screens/App/CompletedTasks";
-
+import CreateTask from "./screens/App/CreateTask";
+import TaskBoard from "./screens/App/Taskbar";
 
 import filemanagerdashboard from "./screens/FileManager/Dashboard";
 import filedocuments from "./screens/FileManager/Documents";
@@ -310,6 +311,16 @@ class App extends React.Component {
                   exact
                   path={`${process.env.PUBLIC_URL}/pendingtasks`}
                   element={<PendingTasks />}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/createtask`}
+                  element={<CreateTask />}
+                />
+                <Route
+                  exact
+                  path={`${process.env.PUBLIC_URL}/taskboard`}
+                  element={<TaskBoard />}
                 />
                 <Route
                   exact

@@ -16,33 +16,6 @@ import { notifyGeneralInfo } from '../../actions/UIElementsAction'; // Import no
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 
-// Constants
-const TASK_CATEGORIES = [
-  {
-    id: 'dev',
-    name: 'Development',
-    subcategories: [
-      { id: 'frontend', name: 'Frontend', pricePerHour: 50 },
-      { id: 'backend', name: 'Backend', pricePerHour: 60 },
-      { id: 'fullstack', name: 'Full Stack', pricePerHour: 70 }
-    ]
-  },
-  {
-    id: 'design',
-    name: 'Design',
-    subcategories: [
-      { id: 'ui', name: 'UI Design', pricePerHour: 45 },
-      { id: 'ux', name: 'UX Design', pricePerHour: 55 },
-      { id: 'graphics', name: 'Graphic Design', pricePerHour: 40 }
-    ]
-  }
-];
-
-const CLIENTS = [
-  { id: 'client1', name: 'Acme Corp' },
-  { id: 'client2', name: 'Tech Solutions' },
-  { id: 'client3', name: 'Innovative Inc' }
-];
 
 const AppTaskbar = (props) => {
   const [state, setState] = useState([
@@ -54,8 +27,6 @@ const AppTaskbar = (props) => {
   ]);
 
   const [tasks, setTasks] = useState([]);
-  const [isCreateTaskModalOpen, setIsCreateTaskModalOpen] = useState(false);
-
   // New state for controlling task duration section visibility
   const [isTaskDurationOpen, setIsTaskDurationOpen] = useState(false);
 
@@ -86,20 +57,6 @@ const AppTaskbar = (props) => {
     ratePerHour: 0,
     totalCost: 0
   });
-
-  const [selectedClients, setSelectedClients] = useState([]);
-
-  const clientOptions = [
-    { label: "Client 1", value: "client1" },
-    { label: "Client 2", value: "client2" },
-    { label: "Client 3", value: "client3" },
-    // Add more client options as needed
-  ];
-
-  const handleClientChange = (values) => {
-    setSelectedClients(values);
-    // Add any additional logic for client selection
-  };
 
   const data = [
     {
@@ -156,50 +113,6 @@ const AppTaskbar = (props) => {
     },
   ];
 
-  // New state for template
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
-  const [templateOptions, setTemplateOptions] = useState([
-    { value: 'template1', label: 'Template 1' },
-    { value: 'template2', label: 'Template 2' },
-    { value: 'template3', label: 'Template 3' },
-  ]);
-
-  const toggleTaskDuration = () => {
-    setIsTaskDurationOpen(!isTaskDurationOpen);
-  };
-
-  const generateUniqueId = () => {
-    return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  };
-
-
-  const generateTaskId = () => {
-    const lastTaskId = localStorage.getItem('lastTaskId');
-    const newTaskId = lastTaskId ? parseInt(lastTaskId) + 1 : 1;
-
-    localStorage.setItem('lastTaskId', newTaskId.toString());
-
-    return `TASK-${newTaskId.toString().padStart(4, '0')}`;
-  };
-
-  // Open Create Task Modal
-  const openCreateTaskModal = () => {
-    setTaskHeader({
-      taskId: "TASK-0001",
-      category: '',
-      subcategory: '',
-      client: '',
-      startDate: '',
-      endDate: '',
-      title: ''
-    });
-    setTaskRows([{ title: '', minutes: '0', percentage: 0 }]);
-    setRatePerHour(0);
-    setIsCreateTaskModalOpen(true);
-    // Reset task duration to closed when opening modal
-    setIsTaskDurationOpen(false);
-  };
-
   // Handle Header Input Changes
   const handleHeaderInputChange = (e) => {
     const { name, value } = e.target;
@@ -208,48 +121,7 @@ const AppTaskbar = (props) => {
       [name]: value
     }));
   };
-
-  // Add New Task Row
-  const addTaskRow = (newRow = {}) => {
-    const defaultRow = {
-      title: newRow.title || '',
-      minutes: newRow.minutes || 0,
-      percentage: newRow.percentage || 0,
-      status: newRow.status || 'Not Started',
-      rate: newRow.rate || 0
-    };
-
-    const updatedRows = [...taskRows, defaultRow];
-    setTaskRows(updatedRows);
-
-    const costDetails = calculateRealTimeCost(updatedRows);
-
-    setRealTimeCost(costDetails);
-  };
-
-  // Update Task Row
-  const updateTaskRow = (index, field, value) => {
-    const updatedRows = taskRows.map((row, i) =>
-      i === index ? { ...row, [field]: value } : row
-    );
-    setTaskRows(updatedRows);
-    // console.log(index, "  ", field, " ", value, " ")
-    const costDetails = calculateRealTimeCost(updatedRows);
-
-    setRealTimeCost(costDetails);
-  };
-
-  // Remove Task Row
-  const removeTaskRow = (index) => {
-    const updatedRows = taskRows.filter((_, i) => i !== index);
-    setTaskRows(updatedRows);
-
-    const costDetails = calculateRealTimeCost(updatedRows);
-
-    setRealTimeCost(costDetails);
-  };
-
-  // Calculate Total Minutes
+ // Calculate Total Minutes
   const calculateTotalMinutes = () => {
     return taskRows.reduce((sum, row) => sum + Number(row.minutes), 0);
   };
@@ -320,158 +192,7 @@ const AppTaskbar = (props) => {
     taskDetails: false
   });
 
-  const createTask = () => {
-    // Validate clients
-    const clientsValid = selectedClients.length > 0;
-    
-    // Validate template
-    const templateValid = selectedTemplate !== '';
-    
-    // Validate category and subcategory
-    const categoryValid = taskHeader.category !== '';
-    const subcategoryValid = taskHeader.subcategory !== '';
-    
-    // Validate date range
-    const dateRangeValid = dateRange.startDate && dateRange.endDate && 
-      dateRange.startDate <= dateRange.endDate;
-    
-    // Validate payment type
-    const paymentTypeValid = paymentType !== '';
-    
-    // Validate task details
-    const taskDetailsValid = taskRows.length > 0 && 
-      taskRows.every(row => row.title && 
-        (paymentType === 'lumpsum' ? row.rate : row.minutes)
-      );
 
-    // Prepare validation errors
-    const errors = {
-      clients: !clientsValid,
-      template: !templateValid,
-      category: !categoryValid,
-      subcategory: !subcategoryValid,
-      dateRange: !dateRangeValid,
-      paymentType: !paymentTypeValid,
-      taskDetails: !taskDetailsValid
-    };
-
-    // Update validation errors
-    setValidationErrors(errors);
-
-    // Collect and show validation error notifications
-    const errorMessages = [];
-    if (!clientsValid) errorMessages.push('Please select at least one client');
-    if (!templateValid) errorMessages.push('Please select a template');
-    if (!categoryValid) errorMessages.push('Please select a category');
-    if (!subcategoryValid) errorMessages.push('Please select a subcategory');
-    if (!dateRangeValid) errorMessages.push('Please provide a valid date range');
-    if (!paymentTypeValid) errorMessages.push('Please select a payment type');
-    if (!taskDetailsValid) errorMessages.push('Please fill in all task details correctly');
-
-    // Show error notifications if there are validation errors
-    if (errorMessages.length > 0) {
-      errorMessages.forEach(message => {
-        toast.error(message, {
-          position: "top-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          style: {
-            backgroundColor: '#dc3545', // Bootstrap danger red
-            color: 'white',
-          }
-        });
-      });
-      return; // Stop execution if there are validation errors
-    }
-
-    // Only create task if all validations pass
-    const taskRowTitles = taskRows.map(row => row.title).filter(title => title.trim() !== '');
-    const combinedTaskTitle = taskRowTitles.length > 0
-      ? taskRowTitles.join(', ')
-      : taskHeader.title;
-
-    setTaskHeader(prev => ({
-      ...prev,
-      title: combinedTaskTitle
-    }));
-
-    const newTask = {
-      id: generateUniqueId(),
-      ...taskHeader,
-      rows: taskRows,
-      rowTitles: taskRows.map(row => row.title).filter(title => title.trim() !== ''),
-      title: taskRows[0]?.title || 'Untitled Task',
-      totalHours: calculateTotalMinutes(),
-      ratePerHour: ratePerHour,
-      totalCost: realTimeCost.totalCost,
-      status: 'created'
-    };
-
-    // Validate task creation
-    if (taskRows.length > 0) {
-      // Show success notification first
-      toast.success('Task created successfully!', {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          backgroundColor: '#28a745', // Bootstrap success green
-          color: 'white',
-        }
-      });
-
-      // Check for empty task rows and show error if needed
-      const emptyTaskRows = taskRows.filter(row => !row.title.trim());
-      if (emptyTaskRows.length > 0) {
-        toast.error(`${emptyTaskRows.length} task row(s) are empty!`, {
-          position: "top-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          progress: undefined,
-          style: {
-            backgroundColor: '#dc3545', // Bootstrap danger red
-            color: 'white',
-          }
-        });
-      }
-
-      setTasks(prevTasks => {
-        const updatedTasks = [...prevTasks, newTask];
-        return updatedTasks;
-      });
-
-      // Delay closing the modal to ensure notifications are visible
-      setTimeout(() => {
-        setIsCreateTaskModalOpen(false);
-      }, 3000); // 3 seconds delay
-    } else {
-      // Error notification for no task rows
-      toast.error('No task rows created!', {
-        position: "top-right",
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
-        style: {
-          backgroundColor: '#dc3545', // Bootstrap danger red
-          color: 'white',
-        }
-      });
-    }
-  };
 
   // Load tasks from localStorage on component mount
   useEffect(() => {
@@ -494,7 +215,7 @@ const AppTaskbar = (props) => {
       ...selectedTask,
       ...row,
       ratePerHour: row.ratePerHour || selectedTask.ratePerHour || 0,
-      totalCost: row.totalCost || selectedTask.totalCost || 0
+      totalCost: row.totalCost || selectedTask.totalCost || 2500
     });
     setViewTaskModalOpen(true);
   };
@@ -572,10 +293,6 @@ const AppTaskbar = (props) => {
     if (!hoursString) return 0;
     const [hours, minutes] = hoursString.split(':').map(Number);
     return hours + (minutes / 60);
-  };
-
-  const handleCreateInvoice = (taskId) => {
-    alert(`Invoice creation for task ${taskId} is not yet implemented`);
   };
 
   const customStyles = {
@@ -967,14 +684,7 @@ const AppTaskbar = (props) => {
   const [paymentType, setPaymentType] = useState('');
   const [paymentRate, setPaymentRate] = useState('');
 
-  const addNewTaskRow = () => {
-    const newRow = {
-      title: '',
-      minutes: '0',
-      percentage: 0
-    };
-    addTaskRow(newRow);
-  };
+
 
   // Notification handling from Redux
   useEffect(() => {
@@ -1035,630 +745,50 @@ const AppTaskbar = (props) => {
     <div style={{ flex: 1 }}>
       <div>
         <div className="ng-star-inserted">
-          <div className="container-fluid">
+          <div className="container-fluid px-4">
             <PageHeader
               HeaderText="TaskBoard"
               Breadcrumb={[{ name: "App" }, { name: "TaskBoard" }]}
+              SearchComponent={
+                <div className="row mb-3">
+        <div className="col-md-6">
+          <div className="input-group" style={{ width: '50%' }}>
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Search tasks..."
+             
+              onChange={(e) => handleSearch(e)}
             />
-            <div className="row">
-              {/* Create Task Button */}
-              <div className="form-group col-lg-12" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
-                <span style={{ fontWeight: '600', color: '#6c757d' }}>Create Task</span>
-                <button
-                  className="btn theme-bg-primary rounded-pill"
-                  onClick={openCreateTaskModal}
-                  type="button"
-                >
-                  Create Assignment
-                </button>
-              </div>
-
-              {/* Task Columns */}
-              <div className="col-lg-4 col-md-12">
-                <div className="card created_task">
-                  <div className="header">
-                    <h2>Created Tasks</h2>
-                    <ul className="header-dropdown">
-                      <li>
-                        <Link to="#" onClick={openCreateTaskModal}>
-                          <i className="icon-plus"></i>
-                        </Link>
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="body taskboard">
-                    {createdTasks.map((task, i) => (
-                      <div key={task.taskId} className="card mb-2">
-                        <div className="card-body">
-                          {task.rowTitles && task.rowTitles.length > 1 ? (
-                            <>
-                              <h5>{task.title}</h5>
-                              <ul className="small text-muted pl-3">
-                                {task.rowTitles.map((title, idx) => (
-                                  <li key={idx}>{title}</li>
-                                ))}
-                              </ul>
-                            </>
-                          ) : (
-                            <h5>{task.title}</h5>
-                          )}
-                          <p>{task.subtitle}</p>
-                          <div className="action">
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-secondary"
-                              style={{
-                                borderRadius: '20px', // Rounded pill shape
-                                padding: '0.25rem 0.75rem',
-                                textTransform: 'uppercase',
-                                fontWeight: '600',
-                                letterSpacing: '0.5px',
-                                border: '2px solid',
-                                transition: 'all 0.3s ease'
-                              }}
-                              onClick={() => viewTask(task)}
-                            >
-                              View
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* In Progress Tasks */}
-              <div className="col-lg-4 col-md-12">
-                <div className="card created_task">
-                  <div className="header">
-                    <h2>In Progress Tasks</h2>
-                  </div>
-                  <div className="body taskboard">
-                    {inProgressTasks.map((task, i) => (
-                      <div key={task.taskId} className="card mb-2">
-                        <div className="card-body">
-                          <h5>{task.title}</h5>
-                          <p>{task.subtitle}</p>
-                          <div className="action">
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-secondary"
-                              style={{
-                                borderRadius: '20px', // Rounded pill shape
-                                padding: '0.25rem 0.75rem',
-                                textTransform: 'uppercase',
-                                fontWeight: '600',
-                                letterSpacing: '0.5px',
-                                border: '2px solid',
-                                transition: 'all 0.3s ease'
-                              }}
-                              onClick={() => viewTask(task)}
-                            >
-                              View
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Completed Tasks */}
-              <div className="col-lg-4 col-md-12">
-                <div className="card created_task">
-                  <div className="header">
-                    <h2>Completed Tasks</h2>
-                  </div>
-                  <div className="body taskboard">
-                    {completedTasks.map((task, i) => (
-                      <div key={task.taskId} className="card mb-2">
-                        <div className="card-body">
-                          <h5>{task.title}</h5>
-                          <p>{task.subtitle}</p>
-                          <div className="action">
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-secondary"
-                              style={{
-                                borderRadius: '20px', // Rounded pill shape
-                                padding: '0.25rem 0.75rem',
-                                textTransform: 'uppercase',
-                                fontWeight: '600',
-                                letterSpacing: '0.5px',
-                                border: '2px solid',
-                                transition: 'all 0.3s ease'
-                              }}
-                              onClick={() => viewTask(task)}
-                            >
-                              View
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+          </div>
+        </div>
+      </div>
+              }
+            />
+            {/* Tasks Table */}
+            <div className="row px-0 mb-n3">
+              <div className="col-12 px-0">
+                <div className="card border-0">
+                  <div className="card-body py-0" style={{ padding: 0 }}>
+                    <CustomTable
+                      title=""
+                      rows={rows}
+                      onRowAction={(task) => {
+                        setSelectedTask({
+                          ...selectedTask,
+                          ...task,
+                          ratePerHour: task.ratePerHour || selectedTask.ratePerHour || 0,
+                          totalCost: task.totalCost || selectedTask.totalCost || 2500
+                        });
+                        setViewTaskModalOpen(true);
+                      }}
+                    />
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Tasks Table */}
-            <CustomTable
-              title="Task List"
-              rows={rows}
-              onSearch={handleSearch}
-              onRowAction={(task) => {
-                setSelectedTask({
-                  ...selectedTask,
-                  ...task,
-                  ratePerHour: task.ratePerHour || selectedTask.ratePerHour || 0,
-                  totalCost: task.totalCost || selectedTask.totalCost || 2500
-                });
-                setViewTaskModalOpen(true);
-              }}
-            />
-
-            {/* Create Task Sliding Panel */}
-            {isCreateTaskModalOpen && (
-              <div className={`task-modal-overlay ${isCreateTaskModalOpen ? 'open' : ''}`} onClick={() => setIsCreateTaskModalOpen(false)}>
-                <div className={`task-modal-container ${isCreateTaskModalOpen ? 'open' : ''}`} onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header d-flex justify-content-between align-items-center">
-                <h5 className="modal-title ubuntu-font ubuntu-bold">View Task</h5>
-                <div className="d-flex align-items-center justify-content-end">
-                  <input
-                    type="text"
-                    className="form-control task-id-input text-center"
-                    value={taskHeader.taskId || 'N/A'}
-                    readOnly
-                    style={{ width: '150px' }}
-                  />
-                  <button
-                    type="button"
-                    className="close ml-2"
-                    onClick={() => setIsCreateTaskModalOpen(false)}
-                  >
-                    &times;
-                  </button>
-                </div>
-              </div>
-
-                  <div className="modal-body ubuntu-font ubuntu-regular">
-                    {/* Task Header Inputs */}
-                    <div className="row mb-3">
-                      <div className="col-md-6">
-                        <label>Select Clients</label>
-                        <Select
-                          className="js-states"
-                          placeholder="Select Clients"
-                          options={clientOptions}
-                          values={selectedClients}
-                          disabled={false}
-                          create={true}
-                          multi={true}
-                          dropdownHandle={false}
-                          searchable={true}
-                          onChange={handleClientChange}
-                          styles={{
-                            control: (base) => ({
-                              ...base,
-                              fontSize: '0.9rem',
-                              minHeight: '38px',
-                            }),
-                            placeholder: (base) => ({
-                              ...base,
-                              color: '#6c757d', // Bootstrap's default placeholder color
-                              fontSize: '0.9rem',
-                              opacity: 0.7
-                            }),
-                            singleValue: (base) => ({
-                              ...base,
-                              fontSize: '0.9rem'
-                            }),
-                            input: (base) => ({
-                              ...base,
-                              fontSize: '0.9rem'
-                            })
-                          }}
-                        />
-                        {validationErrors.clients && (
-                          <div className="text-danger">Please select at least one client.</div>
-                        )}
-                      </div>
-                      <div className="col-md-6">
-                        <label>Template</label>
-                        <select
-                          name="template"
-                          className="form-control"
-                          value={selectedTemplate}
-                          onChange={(e) => {
-                            setSelectedTemplate(e.target.value);
-                          }}
-                          required
-                        >
-                          <option value="">Select Template</option>
-                          {templateOptions.map(template => (
-                            <option key={template.value} value={template.value}>
-                              {template.label}
-                            </option>
-                          ))}
-                        </select>
-                        {validationErrors.template && (
-                          <div className="text-danger">Please select a template.</div>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="row mb-3">
-                      <div className="col-md-6">
-                        <label>Task Category</label>
-                        <select
-                          name="category"
-                          className="form-control"
-                          value={taskHeader.category}
-                          onChange={(e) => {
-                            const selectedCategory = TASK_CATEGORIES.find(cat => cat.id === e.target.value);
-                            setTaskHeader(prev => ({
-                              ...prev,
-                              category: e.target.value,
-                              subcategory: ''
-                            }));
-                          }}
-                          required
-                        >
-                          <option value="">Select Category</option>
-                          {TASK_CATEGORIES.map(cat => (
-                            <option key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </option>
-                          ))}
-                        </select>
-                        {validationErrors.category && (
-                          <div className="text-danger">Please select a category.</div>
-                        )}
-                      </div>
-                      <div className="col-md-6">
-                        <label>Subcategory</label>
-                        <select
-                          name="subcategory"
-                          className="form-control"
-                          value={taskHeader.subcategory}
-                          onChange={(e) => {
-                            const selectedSubcategory = e.target.value;
-                            setTaskHeader(prev => ({
-                              ...prev,
-                              subcategory: selectedSubcategory
-                            }));
-                          }}
-                          disabled={!taskHeader.category}
-                          required
-                        >
-                          <option value="">Select Subcategory</option>
-                          {taskHeader.category
-                            ? TASK_CATEGORIES
-                              .find(cat => cat.id === taskHeader.category)
-                              .subcategories.map(sub => (
-                                <option key={sub.id} value={sub.id}>
-                                  {sub.name}
-                                </option>
-                              ))
-                            : null
-                          }
-                        </select>
-                        {validationErrors.subcategory && (
-                          <div className="text-danger">Please select a subcategory.</div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Task Duration Section */}
-                    <div className="row mb-3">
-                      <div className="col-md-6">
-                        <label>Task Duration</label>
-                        <div className="d-flex align-items-center position-relative">
-                          <input
-                            type="text"
-                            className="form-control"
-                            value={`${dateRange.startDate.toLocaleDateString()} - ${dateRange.endDate.toLocaleDateString()}`}
-                            onClick={() => setShowDateRangePicker(!showDateRangePicker)}
-                            onChange={handleManualDateInput}
-                            onBlur={handleManualDateInput}
-                            placeholder="MM/DD/YYYY - MM/DD/YYYY"
-                          />
-                          <span
-                            className="position-absolute calendar-icon"
-                            style={{ right: '10px', cursor: 'pointer' }}
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent event from propagating to input
-                              setShowDateRangePicker(prev => !prev);
-                            }}
-                          >
-                            📅
-                          </span>
-                        </div>
-                        {showDateRangePicker && (
-                          <div 
-                            className="position-absolute date-range-dropdown" 
-                            style={{ 
-                              zIndex: 1000,
-                              top: '100%', // Position below the input
-                              left: 0,
-                              width: '100%'
-                            }}
-                            onClick={(e) => e.stopPropagation()} // Prevent clicking inside dropdown from closing it
-                          >
-                            <DateRangePicker
-                              ranges={[dateRange]}
-                              onChange={(selection) => {
-                                handleDateRangeChange(selection);
-                              }}
-                              moveRangeOnFirstSelection={false}
-                              showSelectionPreview={true}
-                              editableDateInputs={true}
-                              className="date-range-picker"
-                            />
-                          </div>
-                        )}
-                        {validationErrors.dateRange && (
-                          <div className="text-danger">Please select a valid date range.</div>
-                        )}
-                      </div>
-                      <div className="col-md-6">
-                        <label>Payment Type</label>
-                        <select
-                          className="form-control"
-                          value={paymentType}
-                          onChange={(e) => {
-                            setPaymentType(e.target.value);
-                            // Reset rate when payment type changes
-                            setPaymentRate('');
-                          }}
-                        >
-                          <option value="">Select Payment Type</option>
-                          <option value="lumpsum">Lump Sum</option>
-                          <option value="payperminute">Pay Per Minute</option>
-                        </select>
-                        {validationErrors.paymentType && (
-                          <div className="text-danger">Please select a payment type.</div>
-                        )}
-                      </div>
-                    </div>
-                   
-                    {/* Task Details Table */}
-                    <div className="form-group">
-
-                      <div className="table-responsive">
-                        <table className="table table-bordered text-center">
-                          <thead>
-                            <tr>
-                              <th style={{ width: '50px', textAlign: 'center' }}>Sr. No.</th>
-                              <th style={{ textAlign: 'center' }}>Task Details</th>
-                              {paymentType === 'lumpsum' ? (
-                                <th className="text-center" style={{ width: '150px' }}>
-                                  <div className="d-flex flex-column align-items-center">
-
-                                    <span>Fees</span>
-                                  </div>
-                                </th>
-                              ) : (
-                                <th className="text-center" style={{ width: '150px' }}>
-                                  <span className="d-block">Minutes</span>
-                                </th>
-                              )}
-                              <th className="text-center">
-                                <button
-                                  type="button"
-                                  className="btn btn-success mr-1"
-                                  onClick={() => addTaskRow()}
-                                >
-                                  <i className="fa fa-plus-circle"></i>
-                                </button>
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {taskRows.map((row, index) => (
-                              <tr key={index}>
-                                <td style={{ width: '50px', textAlign: 'center' }}>{index + 1}</td>
-                                <td style={{ textAlign: 'center' }}>
-                                  <div className="d-flex justify-content-center">
-                                    <input
-                                      type="text"
-                                      className="form-control text-center"
-                                      style={{ maxWidth: '500px' }} 
-                                      value={row.title}
-                                      onChange={(e) => updateTaskRow(index, 'title', e.target.value)}
-                                    />
-                                  </div>
-                                </td>
-                                {paymentType === 'lumpsum' ? (
-                                  <td>
-                                    <div className="d-flex justify-content-center">
-                                      <div className="input-group mb-3" style={{ maxWidth: '150px',marginTop:'10px' }}>
-                                        <div className="input-group-prepend">
-                                          <span className="input-group-text">₹</span>
-                                        </div>
-                                        <input
-                                          type="text"
-                                          aria-label="Amount (to the nearest rupee)"
-                                          className="form-control text-center"
-                                          value={row.rate || 0}
-                                          onChange={(e) => updateTaskRow(index, 'rate', e.target.value)}
-                                          placeholder="Enter Rate"
-                                        />
-                                      </div>
-                                    </div>
-                                  </td>
-                                ) : (
-                                  <td>
-                                    <div className="d-flex justify-content-center">
-                                      <div className="input-group">
-                                        <div className="input-group-prepend">
-                                          <span className="input-group-text">
-                                            <i className="fa fa-clock-o"></i>
-                                          </span>
-                                        </div>
-                                        <input
-                                          type="text"
-                                          className="form-control text-center"
-                                          style={{ maxWidth: '100px' }}
-                                          value={row.minutes}
-                                          onChange={(e) => updateTaskRow(index, 'minutes', e.target.value)}
-                                          placeholder="Minutes"
-                                        />
-                                      </div>
-                                    </div>
-                                  </td>
-                                )}
-                                <td className="text-center align-middle">
-                                  <button
-                                    type="button"
-                                    className="btn btn-danger mr-1"
-                                    onClick={() => removeTaskRow(index)}
-                                  >
-                                    <i className="fa fa-trash"></i>
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {/* Calculations Section */}
-                    {paymentType === 'payperminute' ? (
-                      <div className="row mb-3 d-flex justify-content-center align-items-center text-center">
-                        <div className="col-md-3 d-flex flex-column align-items-center">
-                          <label className="mb-2">Total Minutes</label>
-                          <div className="input-group justify-content-center" style={{width: 'auto'}}>
-                            <div className="input-group-prepend">
-                              <span className="input-group-text">
-                                <i className="fa fa-clock-o"></i>
-                              </span>
-                            </div>
-                            <input
-                              type="text"
-                              className="form-control text-center"
-                              style={{ 
-                                width: '100px',
-                                backgroundColor: 'white',
-                                color: 'black'
-                              }}
-                              value={taskRows.reduce((sum, row) => sum + Number(row.minutes || 0), 0)}
-                              readOnly
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-3 d-flex flex-column align-items-center">
-                          <label className="mb-2">Total Hours</label>
-                          <div className="input-group justify-content-center" style={{width: 'auto'}}>
-                            <div className="input-group-prepend">
-                              <span className="input-group-text">
-                                <i className="fa fa-clock-o"></i>
-                              </span>
-                            </div>
-                            <input
-                              type="text"
-                              className="form-control text-center"
-                              style={{ 
-                                width: '100px',
-                                backgroundColor: 'white',
-                                color: 'black'
-                              }}
-                              value={(taskRows.reduce((sum, row) => sum + Number(row.minutes || 0), 0) / 60).toFixed(2)}
-                              readOnly
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-3 d-flex flex-column align-items-center">
-                          <label className="mb-2">Fee per Hour</label>
-                          <div className="input-group justify-content-center" style={{width: 'auto'}}>
-                            <div className="input-group-prepend">
-                              <span className="input-group-text">₹</span>
-                            </div>
-                            <input
-                              type="text"
-                              className="form-control text-center"
-                              style={{ 
-                                width: '100px',
-                                backgroundColor: 'white',
-                                color: 'black'
-                              }}
-                              value={selectedTask.ratePerHour || 500}
-                              readOnly
-                            />
-                          </div>
-                        </div>
-                        <div className="col-md-3 d-flex flex-column align-items-center">
-                          <label className="mb-2">Total Fees</label>
-                          <div className="input-group justify-content-center" style={{width: 'auto'}}>
-                            <div className="input-group-prepend">
-                              <span className="input-group-text">₹</span>
-                            </div>
-                            <input
-                              type="text"
-                              className="form-control text-center"
-                              style={{ 
-                                width: '100px',
-                                backgroundColor: 'white',
-                                color: 'black'
-                              }}
-                              value={
-                                ((taskRows.reduce((sum, row) => sum + Number(row.minutes || 0), 0) / 60) * 
-                                (selectedTask.ratePerHour || 500)).toFixed(2)
-                              }
-                              readOnly
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ) : paymentType === 'lumpsum' ? (
-                      <div className="row mb-3">
-                        <div className="col-md-9"></div>
-                        <div className="col-md-3 text-center">
-                          <label className="d-block text-center">Total Fees</label>
-                          <div className="input-group justify-content-center" style={{ width: '100px', margin: '0 auto' }}>
-                            <div className="input-group-prepend">
-                              <span className="input-group-text">₹</span>
-                            </div>
-                            <input
-                              type="text"
-                              className="form-control text-center"
-                              style={{
-                               
-                                minWidth: '60px',
-                               
-                              }}
-                              value={`${realTimeCost.totalCost.toFixed(2)}`}
-                              readOnly
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    ) : null}
-
-                  </div>
-
-                  <div className="modal-footer">
-                    <button
-                      type="button"
-                      className="btn btn-secondary mr-2"
-                      onClick={() => setIsCreateTaskModalOpen(false)}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      onClick={createTask}
-                    >
-                      Create Task
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+          
 
             {/* View Task Modal */}
             {viewTaskModalOpen && (
@@ -1672,16 +802,17 @@ const AppTaskbar = (props) => {
                 className="form-control task-id-input text-center"
                 value={selectedTask.taskId}
                 readOnly
-                style={{ width: '150px',marginLeft:'590px' }}
+                
               />
-            </div>
-                    <button
+               <button
                       type="button"
                       className="close"
                       onClick={() => setViewTaskModalOpen(false)}
                     >
                       &times;
                     </button>
+            </div>
+                   
                   </div>
 
                   <div className="modal-body ubuntu-font ubuntu-regular">
@@ -1742,7 +873,6 @@ const AppTaskbar = (props) => {
                           type="text"
                           className="form-control"
                           placeholder="Enter duration date"
-                          style={{ width: '410px' }}
                           value={selectedTask.duration ? `${selectedTask.duration} ` : '5/1/2025'}
                           readOnly
                         />
@@ -1755,7 +885,6 @@ const AppTaskbar = (props) => {
                             className="form-control"
                             value={'Pay Per Minute'}
                             placeholder="Select execution date"
-                            style={{ width: '410px' }}
                             readOnly
                           />
                         </div>

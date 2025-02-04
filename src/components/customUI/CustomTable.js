@@ -86,22 +86,35 @@ const CustomTable = ({
     return result;
   }, [rows, searchTerm, sortConfig]);
 
-  const defaultRenderStatusColumn = (task) => (
-    <div style={{ width: '100%' }}>
-      <ProgressBar 
-        now={task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length} 
-        label={`${(task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length).toFixed(0)}%`} 
-        animated 
-        variant={
-          task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length === 0 ? 'danger' : 
-          task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length < 99 ? 'warning' : 
-          'success'
-        } 
-        labelProps={{ style: { color: 'black', fontWeight: 'bold' } }}
-        style={{ marginTop: '10px' }}
-      />
-    </div>
-  );
+  const defaultRenderStatusColumn = (task) => {
+    const averagePercentage = task.rows
+      ? Math.round(task.rows.reduce((sum, r) => sum + (r.percentage || 0), 0) / task.rows.length)
+      : 0;
+
+    return (
+      <div className="d-flex flex-column justify-content-center align-items-center w-100">
+        <span 
+          className="mb-1 font-weight-bold" 
+          style={{ 
+            fontSize: '0.7rem', 
+            color: 'black' 
+          }}
+        >
+          {averagePercentage}%
+        </span>
+        <ProgressBar 
+          now={averagePercentage} 
+          animated 
+          variant={
+            averagePercentage === 0 ? 'danger' : 
+            averagePercentage < 99 ? 'warning' : 
+            'success'
+          } 
+          style={{ width: '100%' }}
+        />
+      </div>
+    );
+  };
 
   const defaultRenderActionColumn = (task, onRowAction) => (
     <Link 
@@ -120,10 +133,10 @@ const CustomTable = ({
           <h2>{title}</h2>
         </div>
         <div className="body">
-          <form className="ng-untouched ng-dirty ng-invalid mb-3">
-            <div className="row d-flex justify-content-between">
+          <form className="ng-untouched ng-dirty ng-invalid mb-2">
+            <div className="row d-flex justify-content-between align-items-center" style={{ marginBottom: '-10px' }}>
               <div className="form-group col-lg-3">
-                <label>Search</label>
+                <label className="sr-only">Search</label>
                 <input
                   className="form-control"
                   name="search"

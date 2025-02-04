@@ -5,6 +5,7 @@ import PageHeader from "../../components/PageHeader";
 import DataTable from "react-data-table-component";
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import CustomTable from '../../components/customUI/CustomTable';
 
 const TaskRowItem = ({ 
   row, 
@@ -138,11 +139,11 @@ const PendingTasks = () => {
       paymentType:'Lump Sum',
       completionPercentage: 0,
       rows: [
-        { title: 'Wireframing', minutes: '25', status: 'pending' },
-        { title: 'Prototyping', minutes: '30', status: 'pending' }
+        { title: 'Wireframing', rate: '100', status: 'pending' },
+        { title: 'Prototyping', rate: '130', status: 'pending' }
       ],
       ratePerHour: '1500',
-      totalCost: '1200'
+      totalCost: '230'
     }
   ];
 
@@ -568,7 +569,7 @@ const PendingTasks = () => {
                           type="text"
                           className="form-control"
                           placeholder="Enter duration date"
-                          style={{ width: '340px' }}
+                          
                           value={selectedTask.duration ? `${selectedTask.duration} ` : '5/1/2025'}
                           readOnly
                         />
@@ -579,9 +580,9 @@ const PendingTasks = () => {
                           <input
                             type="text"
                             className="form-control"
-                            value={'Pay Per Minute'}
+                            value={selectedTask.paymentType ? `${selectedTask.paymentType} ` : '5/1/2025'}
                             placeholder="Select execution date"
-                            style={{ width: '410px' }}
+                            
                             readOnly
                           />
                         </div>
@@ -594,7 +595,7 @@ const PendingTasks = () => {
                           type="date"
                           className="form-control"
                           placeholder="Enter execution date"
-                          style={{ width: '340px' }}
+                          
                           value={selectedTask.executionDate || ''}
                           onChange={(e) => {
                             const newDate = e.target.value;
@@ -612,7 +613,7 @@ const PendingTasks = () => {
                       className="form-control"
                       value={selectedTask.status || ''}
                       onChange={(e) => handleTaskDetailChange('status', e.target.value)}
-                      style={{ width: '330px' }}
+                     
                     >
                       <option value="">Select Status</option>
                     
@@ -628,79 +629,91 @@ const PendingTasks = () => {
                 {/* Task Rows */}
                 <div className="table-responsive">
                   <table className="table table-bordered text-center">
-                    <thead className="thead-white" style={{ color: 'black', backgroundColor: 'white' }}>
-                      <tr>
-                        <th className="text-center" style={{ width: '400px' }}>Title</th>
-                        <th className="text-center"style={{ width: '80px' }}>Minutes</th>
-                        <th className="text-center">Executed Minutes</th>
-                      </tr>
+                    <thead>
+                      {selectedTask.paymentType === 'Lump Sum' ? (
+                        <tr>
+                          <th style={{ textAlign: 'center', width: '300px' }}>Title</th>
+                          <th style={{ width: '150px', textAlign: 'center' }}>Rate (₹)</th>
+
+                        </tr>
+                      ) : (
+                        <tr>
+                          <th style={{ textAlign: 'center', width: '300px' }}>Title</th>
+                          <th style={{ width: '100px', textAlign: 'center' }}>Minutes</th>
+                          <th style={{ width: '100px', textAlign: 'center' }}>Executed Minutes</th>
+                        </tr>
+                      )}
                     </thead>
                     <tbody>
-                      {selectedTask.rows.map((row, index) => {
-                        return (
-                          <tr key={index} className="text-center">
-                            <td>{row.title}</td>
-                            <td>{row.minutes || 0} mins</td>
-                            <td className="text-center align-middle p-2">
-                              <div className="input-group justify-content-center">
-                                <div className="input-group-prepend">
-                                  <span 
-                                    className="input-group-text" 
-                                    style={{ 
-                                      backgroundColor: 'white', 
-                                      border: '1px solid #ced4da',
-                                      borderRight: 'none'
-                                    }}
-                                  >
-                                    <i className="fa fa-clock-o"></i>
-                                  </span>
-                                </div>
-                                <input
-                                  type="number"
-                                  className="form-control text-center"
+                      {selectedTask.paymentType === 'Lump Sum' ? (
+                        selectedTask.rows
+                          .filter(row => row.title === selectedTask.title)
+                          .map((row, index) => (
+                            <tr key={index} className="text-center">
+                              <td>{row.title}</td>
+                              <td>₹ {row.rate || 0}</td>
+                            </tr>
+                          ))
+                      ) : (
+                        <tr className="text-center">
+                          <td>{selectedTask.title}</td>
+                          <td>
+                            {selectedTask.rows.find(row => row.title === selectedTask.title)?.minutes || 0} mins
+                          </td>
+                         
+                          <td className="text-center align-middle p-2">
+                            <div className="input-group justify-content-center">
+                              <div className="input-group-prepend">
+                                <span 
+                                  className="input-group-text" 
                                   style={{ 
-                                    maxWidth: '100px',
-                                    backgroundColor: 'white',
-                                    color: 'black',
-                                    borderColor: '#ced4da'
+                                    backgroundColor: 'white', 
+                                    border: '1px solid #ced4da',
+                                    borderRight: 'none'
                                   }}
-                                  value={row.executedMinutes || ''}
-                                  onChange={(e) => {
-                                    const executedMinutes = parseInt(e.target.value) || 0;
-                                    setSelectedTask(prev => {
-                                      const updatedRows = [...prev.rows];
-                                      updatedRows[index] = {
-                                        ...updatedRows[index],
-                                        executedMinutes,
-                                        // Optionally update percentage or other derived values
-                                        percentage: executedMinutes > 0 ? 
-                                          Math.min(100, Math.round((executedMinutes / row.minutes) * 100)) : 
-                                          0
-                                      };
-                                      
-                                      // Recalculate total executed minutes and other task-level metrics
-                                      const totalExecutedMinutes = updatedRows.reduce((sum, r) => sum + (r.executedMinutes || 0), 0);
-                                      const totalHours = Number((totalExecutedMinutes / 60).toFixed(2));
-                                      const ratePerHour = prev.ratePerHour || 0;
-                                      const totalCost = Number((totalHours * ratePerHour).toFixed(2));
-
-                                      return { 
-                                        ...prev, 
-                                        rows: updatedRows,
-                                        executedMinutes: totalExecutedMinutes,
-                                        totalHours,
-                                        totalCost
-                                      };
-                                    });
-                                  }}
-                                  placeholder="Mins"
-                                />
+                                >
+                                  <i className="fa fa-clock-o"></i>
+                                </span>
                               </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                              <input
+                                type="text"
+                                className="form-control text-center"
+                                style={{ 
+                                  maxWidth: '100px',
+                                  backgroundColor: 'white',
+                                  color: 'black',
+                                  borderColor: '#ced4da'
+                                }}
+                                value={selectedTask.executedMinutes || ''}
+                                onChange={(e) => {
+                                  // Only allow numeric input
+                                  const value = e.target.value.replace(/[^0-9]/g, '');
+                                  const executedMinutes = parseInt(value) || 0;
+                                  setSelectedTask(prev => {
+                                    const rowMinutes = prev.rows.find(row => row.title === prev.title)?.minutes || 0;
+                                    const totalHours = Number((executedMinutes / 60).toFixed(2));
+                                    const ratePerHour = prev.ratePerHour || 0;
+                                    const totalCost = Number((totalHours * ratePerHour).toFixed(2));
+
+                                    return { 
+                                      ...prev, 
+                                      executedMinutes,
+                                      totalHours,
+                                      totalCost,
+                                      percentage: executedMinutes > 0 ? 
+                                        Math.min(100, Math.round((executedMinutes / rowMinutes) * 100)) : 
+                                        0
+                                    };
+                                  });
+                                }}
+                                placeholder="Mins"
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
+                    
                   </table>
                 </div>
 
@@ -708,61 +721,47 @@ const PendingTasks = () => {
 
                 {/* Calculations Section */}
                 <div className="row mb-3 justify-content-center">
-                  {/* <div className="col-md-6 text-center" style={{maxWidth: '150px'}}>
-                    <label>Executed Minutes</label>
-                    <div className="input-group">
-                      <div className="input-group-prepend">
-                        <span className="input-group-text">
-                          <i className="fa fa-clock-o"></i>
-                        </span>
+                  {selectedTask.paymentType === 'Pay Per Minute' ? (
+                    <div className="col-md-6 text-center" style={{maxWidth: '150px'}}>
+                      <label>Fee per Hour</label>
+                      <div className="input-group">
+                        <div className="input-group-prepend">
+                          <span className="input-group-text">₹</span>
+                        </div>
+                        <input
+                          type="number"
+                          className="form-control text-center"
+                          value={selectedTask.ratePerHour || ''}
+                          onChange={(e) => {
+                            const ratePerHour = parseFloat(e.target.value) || 0;
+                            handleTaskDetailChange('ratePerHour', ratePerHour);
+                          }}
+                        />
                       </div>
-                      <input
-                        type="number"
-                        className="form-control text-center"
-                        style={{ 
-                          maxWidth: '100px',
-                          backgroundColor: '#F0F0F0',
-                          color: 'black',
-                          borderColor: '#ced4da',
-                          borderRadius: '0.25rem'
-                        }}
-                        value={selectedTask.executedMinutes || ''}
-                        onChange={(e) => {
-                          const executedMinutes = parseInt(e.target.value) || 0;
-                          const totalHours = Number((executedMinutes / 60).toFixed(2)); // Convert minutes to hours
-                          const ratePerHour = selectedTask.ratePerHour || 0;
-                          const totalCost = Number((totalHours * ratePerHour).toFixed(2));
-                          
-                          setSelectedTask(prevTask => ({
-                            ...prevTask,
-                            executedMinutes,
-                            totalHours,
-                            totalCost
-                          }));
-                        }}
-                        placeholder="Minutes"
-                      />
                     </div>
-                  </div> */}
-                 
-                  <div className="col-md-6 text-center" style={{maxWidth: '150px'}}>
-                    <label>Fee per Hour</label>
-                    <div className="input-group">
-                      <div className="input-group-prepend">
-                        <span className="input-group-text">₹</span>
+                  ) : selectedTask.paymentType === 'Lump Sum' ? (
+                    <div className="col-md-6 text-center" style={{maxWidth: '250px'}}>
+                      <label>Fee Per SubTask</label>
+                      <div className="input-group">
+                        <div className="input-group-prepend">
+                          <span className="input-group-text">₹</span>
+                        </div>
+                        <input
+                          type="number"
+                          className="form-control text-center"
+                          value={selectedTask.totalCost || ''}
+                          onChange={(e) => {
+                            const totalCost = parseFloat(e.target.value) || 0;
+                            setSelectedTask(prevTask => ({
+                              ...prevTask,
+                              totalCost: totalCost
+                            }));
+                          }}
+                          placeholder="Enter total task fee"
+                        />
                       </div>
-                      <input
-                        type="number"
-                        className="form-control text-center"
-                        value={selectedTask.ratePerHour || ''}
-                        onChange={(e) => {
-                          const ratePerHour = parseFloat(e.target.value) || 0;
-                          handleTaskDetailChange('ratePerHour', ratePerHour);
-                        }}
-                      />
                     </div>
-                  </div>
-                
+                  ) : null}
                 </div>
 
                 <div className="row mb-3">
@@ -786,21 +785,14 @@ close                    </button>
 
   const handleStatusChange = (taskId, newStatus) => {
     console.log(`Changing status of task ${taskId} to ${newStatus}`);
-    // Implement actual status change logic here
-    // This might involve updating state or making an API call
-    // For now, just a placeholder
+ 
     setSelectedTask(prevTask => ({
       ...prevTask,
       status: newStatus
     }));
   };
 
-  const handleCreateInvoice = (taskId) => {
-    console.log(`Creating invoice for task ${taskId}`);
-    // Implement invoice creation logic here
-    // This might involve opening an invoice modal or making an API call
-  };
-
+ 
   const addAdditionalMinutes = (rowIndex) => {
     const additionalMinutes = selectedTask.rows[rowIndex].additionalMinutes;
     
@@ -868,170 +860,18 @@ close                    </button>
         ]}
       />
       
-      {/* Search Bar */}
-      <div className="row mb-3">
-        <div className="col-md-6">
-          <div className="input-group" style={{ width: '50%' }}>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Search tasks..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Tasks Table */}
-      <Card className="product_item_list product-order-list">
-       
-        <Card.Body>
-          <table className="table table-hover m-b-0 text-center">
-            <thead className="thead-theme theme-bg-primary">
-              <tr>
-                <th 
-                  onClick={() => handleSort('taskId')}
-                  className={sortConfig.key === 'taskId' ? 'sortable active' : 'sortable'}
-                >
-                  Task ID
-                  <span style={{ 
-                    marginLeft: '3px', 
-                    fontSize: '0.5em',  
-                    verticalAlign: 'super',  
-                    opacity: 0.7  
-                  }}>
-                    ▲
-                  </span>
-                </th>
-                <th 
-                  onClick={() => handleSort('client')}
-                  className={sortConfig.key === 'client' ? 'sortable active' : 'sortable'}
-                >
-                  Client
-                  {sortConfig.key === 'client' && (
-                    <span style={{ 
-                      marginLeft: '3px', 
-                      fontSize: '0.5em',  
-                      verticalAlign: 'super',  
-                      opacity: 0.7  
-                    }}>
-                      {sortConfig.direction === 'ascending' ? '▲' : '▼'}
-                    </span>
-                  )}
-                </th>
-                <th 
-                  onClick={() => handleSort('title')}
-                  className={sortConfig.key === 'title' ? 'sortable active' : 'sortable'}
-                >
-                  Title
-                  {sortConfig.key === 'title' && (
-                    <span style={{ 
-                      marginLeft: '3px', 
-                      fontSize: '0.5em',  
-                      verticalAlign: 'super',  
-                      opacity: 0.7  
-                    }}>
-                      {sortConfig.direction === 'ascending' ? '▲' : '▼'}
-                    </span>
-                  )}
-                </th>
-                <th 
-                  onClick={() => handleSort('category')}
-                  className={sortConfig.key === 'category' ? 'sortable active' : 'sortable'}
-                >
-                  Category
-                  {sortConfig.key === 'category' && (
-                    <span style={{ 
-                      marginLeft: '3px', 
-                      fontSize: '0.5em',  
-                      verticalAlign: 'super',  
-                      opacity: 0.7  
-                    }}>
-                      {sortConfig.direction === 'ascending' ? '▲' : '▼'}
-                    </span>
-                  )}
-                </th>
-               
-                <th 
-                  onClick={() => handleSort('PaymentType')}
-                  className={sortConfig.key === 'PaymentType' ? 'sortable active' : 'sortable'}
-                >
-                  Payment Type
-                  {sortConfig.key === 'PaymentType' && (
-                    <span style={{ 
-                      marginLeft: '3px', 
-                      fontSize: '0.5em',  
-                      verticalAlign: 'super',  
-                      opacity: 0.7  
-                    }}>
-                      {sortConfig.direction === 'ascending' ? '▲' : '▼'}
-                    </span>
-                  )}
-                </th>
-                <th 
-                  onClick={() => handleSort('totalCost')}
-                  className={sortConfig.key === 'totalCost' ? 'sortable active' : 'sortable'}
-                >
-                   Assignment Value
-                  {sortConfig.key === 'totalCost' && (
-                    <span style={{ 
-                      marginLeft: '3px', 
-                      fontSize: '0.5em',  
-                      verticalAlign: 'super',  
-                      opacity: 0.7  
-                    }}>
-                      {sortConfig.direction === 'ascending' ? '▲' : '▼'}
-                    </span>
-                  )}
-                </th>
-          
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredAndSortedTasks.map((task, index) => {
-                const totalMinutes = calculateTotalMinutes(task.rows);
-                const statusColor = 
-                  task.status === 'created' || task.completionPercentage === 0 ? 'danger' :
-                  task.status === 'in progress' ? 'warning' :
-                  task.status === 'completed' ? 'success' : 'light';
-
-                const taskProgress = 
-                  task.status === 'created' ? 0 :
-                  task.status === 'completed' ? 100 : 0;
-
-                return (
-                  <tr key={index} className="text-center">
-                   
-                    <td>{task.taskId}</td>
-                    <td>{task.client}</td>
-                    <td>{task.title}</td>
-                    <td>{task.category}</td>
-                    
-                    <td>{task.paymentType}</td>
-                    <td>{task.totalCost}</td>
-                    
-                   
-                   
-                    <td>
-                      <div className="d-flex justify-content-center align-items-center">
-                        <Link 
-                          to="#" 
-                          className="btn btn-outline-info mr-1" 
-                          onClick={() => viewTask(task)}
-                        >
-                          <i className="icon-eye"></i>
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </Card.Body>
-      </Card>
+      <CustomTable 
+        title=""
+        rows={filteredAndSortedTasks}
+        onRowAction={(task) => {
+          setSelectedTask({
+            ...task,
+            ratePerHour: task.ratePerHour || selectedTask.ratePerHour || 0,
+            totalCost: task.totalCost || selectedTask.totalCost || 2500
+          });
+          setViewTaskModalOpen(true);
+        }}
+      />
 
       {renderTaskDetailsModal()}
     </div>

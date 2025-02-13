@@ -62,7 +62,8 @@ class NavbarMenu extends React.Component {
     } else if (
       activeKey === "apptaskbar" ||
       activeKey === "pendingtasks" ||
-      activeKey === "completedtasks"
+      activeKey === "completedtasks" ||
+      activeKey === "createassignment"
     ) {
       this.activeMenutabContainer("TasksContainer");
     } else if (
@@ -587,9 +588,14 @@ class NavbarMenu extends React.Component {
                           <Link to="createtask">Create Task</Link>
                         </li>
                         <li
+                          className={activeKey === "createassignment" ? "active" : ""}
+                        >
+                          <Link to="createassignment">Create Assignment</Link>
+                        </li>
+                        <li
                           className={activeKey === "apptaskbar" ? "active" : ""}
                         >
-                          <Link to="apptaskbar">Create Assignment</Link>
+                          <Link to="apptaskbar">All Task</Link>
                         </li>
                         <li
                           className={activeKey === "pendingtasks" ? "active" : ""}

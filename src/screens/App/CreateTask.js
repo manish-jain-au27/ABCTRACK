@@ -87,18 +87,22 @@ const CreateTask = (props) => {
     totalCost: 0
   });
 
+  // Add state for client selection
   const [selectedClients, setSelectedClients] = useState([]);
+  const [clientOptions, setClientOptions] = useState([]);
 
-  const clientOptions = [
-    { label: "Client 1", value: "client1" },
-    { label: "Client 2", value: "client2" },
-    { label: "Client 3", value: "client3" },
-    // Add more client options as needed
-  ];
+  // Fetch client options 
+  useEffect(() => {
+    const clientOptionsFromClients = CLIENTS.map(client => ({
+      label: client.name,
+      value: client.id
+    }));
+    setClientOptions(clientOptionsFromClients);
+  }, []);
 
+  // Handler for client selection changes
   const handleClientChange = (values) => {
     setSelectedClients(values);
-    // Add any additional logic for client selection
   };
 
   const data = [
@@ -896,10 +900,19 @@ const CreateTask = (props) => {
 
   // Add handler for date range change
   const handleDateRangeChange = (ranges) => {
-    const { startDate, endDate } = ranges.selection;
+    // Safely access the selection, defaulting to an empty object if not present
+    const selection = ranges.selection || ranges[0] || {};
+    
+    // Destructure with fallback values
+    const startDate = selection.startDate || new Date();
+    const endDate = selection.endDate || new Date();
 
     // Update date range state
-    setDateRange(ranges.selection);
+    setDateRange({
+      startDate,
+      endDate,
+      key: 'selection'
+    });
 
     // Only close and update when both start and end dates are selected
     if (startDate && endDate && startDate !== endDate) {
@@ -915,30 +928,36 @@ const CreateTask = (props) => {
 
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
 
-  // Add handler for manual date input
+  // Update handleManualDateInput function
   const handleManualDateInput = (e) => {
     const inputValue = e.target.value;
-    const datePattern = /^(\d{1,2}\/\d{1,2}\/\d{4}) - (\d{1,2}\/\d{1,2}\/\d{4})$/;
+    // Regex to validate DD/MM/YYYY format
+    const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4}) - (\d{2})\/(\d{2})\/(\d{4})$/;
+    const match = inputValue.match(dateRegex);
 
-    if (datePattern.test(inputValue)) {
-      const [startDateStr, endDateStr] = inputValue.split(' - ');
-      const startDate = new Date(startDateStr);
-      const endDate = new Date(endDateStr);
+    if (match) {
+      try {
+        // Parse start and end dates
+        const startDate = new Date(
+          parseInt(match[3]), // year
+          parseInt(match[2]) - 1, // month (0-indexed)
+          parseInt(match[1]) // day
+        );
+        const endDate = new Date(
+          parseInt(match[6]), // year
+          parseInt(match[5]) - 1, // month (0-indexed)
+          parseInt(match[4]) // day
+        );
 
-      if (!isNaN(startDate) && !isNaN(endDate) && startDate <= endDate) {
-        setDateRange({
-          startDate,
-          endDate,
-          key: 'selection'
-        });
-        setTaskHeader(prev => ({
-          ...prev,
-          startDate,
-          endDate
-        }));
-      } else {
-        // Optional: Add error handling for invalid dates
-        console.warn('Invalid date range');
+        // Update date range if dates are valid
+        if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+          setDateRange({
+            startDate,
+            endDate
+          });
+        }
+      } catch (error) {
+        console.error('Invalid date input', error);
       }
     }
   };
@@ -948,8 +967,9 @@ const CreateTask = (props) => {
       const dateRangeElement = document.querySelector('.date-range-picker');
       const inputElement = event.target.closest('.form-control');
 
-      if (dateRangeElement && !dateRangeElement.contains(event.target) &&
-        (!inputElement || !inputElement.closest('.date-range-picker'))) {
+      if (dateRangeElement && 
+          !dateRangeElement.contains(event.target) && 
+          (!inputElement || !inputElement.closest('.date-range-picker'))) {
         setShowDateRangePicker(false);
       }
     };
@@ -1208,45 +1228,42 @@ const CreateTask = (props) => {
                   <div className="modal-body ubuntu-font ubuntu-regular">
                     {/* Task Header Inputs */}
                     <div className="row mb-3">
-                      <div className="col-md-6">
-                        <label>Select Clients</label>
-                        <Select
-                          className="js-states"
-                          placeholder="Select Clients"
-                          options={clientOptions}
-                          values={selectedClients}
-                          disabled={false}
-                          create={true}
-                          multi={true}
-                          dropdownHandle={false}
-                          searchable={true}
-                          onChange={handleClientChange}
-                          styles={{
-                            control: (base) => ({
-                              ...base,
-                              fontSize: '0.9rem',
-                              minHeight: '38px',
-                            }),
-                            placeholder: (base) => ({
-                              ...base,
-                              color: '#6c757d', // Bootstrap's default placeholder color
-                              fontSize: '0.9rem',
-                              opacity: 0.7
-                            }),
-                            singleValue: (base) => ({
-                              ...base,
-                              fontSize: '0.9rem'
-                            }),
-                            input: (base) => ({
-                              ...base,
-                              fontSize: '0.9rem'
-                            })
-                          }}
-                        />
-                        {validationErrors.clients && (
-                          <div className="text-danger">Please select at least one client.</div>
-                        )}
-                      </div>
+                    <div className="col-md-6">
+                    <label>Select Clients</label>
+                    <Select
+                      className="js-states"
+                      placeholder="Select Clients"
+                      options={clientOptions}
+                      values={selectedClients}
+                      disabled={false}
+                      create={true}
+                      multi={true}
+                      dropdownHandle={false}
+                      searchable={true}
+                      onChange={handleClientChange}
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          fontSize: '0.9rem',
+                          minHeight: '38px',
+                        }),
+                        placeholder: (base) => ({
+                          ...base,
+                          color: '#6c757d', // Bootstrap's default placeholder color
+                          fontSize: '0.9rem',
+                          opacity: 0.7
+                        }),
+                        singleValue: (base) => ({
+                          ...base,
+                          fontSize: '0.9rem',
+                        }),
+                        option: (base) => ({
+                          ...base,
+                          fontSize: '0.9rem',
+                        }),
+                      }}
+                    />
+                  </div>
                       <div className="col-md-6">
                         <label>Template</label>
                         <select
@@ -1335,52 +1352,137 @@ const CreateTask = (props) => {
 
                     {/* Task Duration Section */}
                     <div className="row mb-3">
-                      <div className="col-md-6">
+                      <div className="col-md-6 position-static">
                         <label>Task Duration</label>
-                        <div className="d-flex align-items-center position-relative">
+                        <div 
+                          className="date-range-container position-relative" 
+                          ref={(ref) => {
+                            if (ref) {
+                              const calculateDropdownPosition = () => {
+                                const inputRect = ref.querySelector('input').getBoundingClientRect();
+                                
+                                // Calculate position directly below the input
+                                const dropdown = ref.querySelector('.date-range-dropdown');
+                                if (dropdown) {
+                                  dropdown.style.position = 'fixed';
+                                  dropdown.style.top = `${inputRect.bottom + window.scrollY + 5}px`; // Add small offset
+                                  dropdown.style.left = `${inputRect.left}px`;
+                                  dropdown.style.width = `${Math.max(inputRect.width, 800)}px`; // Minimum width of 800px
+                                  dropdown.style.zIndex = '9999';
+                                  dropdown.style.maxWidth = '90vw';
+                                }
+                              };
+
+                              // Calculate position when dropdown is shown
+                              if (showDateRangePicker) {
+                                // Use setTimeout to ensure DOM is updated
+                                setTimeout(calculateDropdownPosition, 0);
+
+                                // Improved click outside listener
+                                const handleClickOutside = (event) => {
+                                  // Only close if click is completely outside the date range picker and dropdown
+                                  if (ref && 
+                                      !ref.contains(event.target) && 
+                                      !event.target.closest('.rdrDateRangeWrapper') &&
+                                      !event.target.closest('.date-range-dropdown')) {
+                                    setShowDateRangePicker(false);
+                                  }
+                                };
+
+                                // Prevent default and stop propagation for clicks inside the dropdown
+                                const preventClose = (event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                };
+
+                                const dateRangeDropdown = ref.querySelector('.date-range-dropdown');
+                                if (dateRangeDropdown) {
+                                  dateRangeDropdown.addEventListener('mousedown', preventClose);
+                                }
+
+                                // Add click outside listener to document
+                                document.addEventListener('mousedown', handleClickOutside);
+                                
+                                return () => {
+                                  document.removeEventListener('mousedown', handleClickOutside);
+                                  if (dateRangeDropdown) {
+                                    dateRangeDropdown.removeEventListener('mousedown', preventClose);
+                                  }
+                                };
+                              }
+                            }
+                          }}
+                        >
                           <input
                             type="text"
                             className="form-control"
-                            value={`${dateRange.startDate.toLocaleDateString()} - ${dateRange.endDate.toLocaleDateString()}`}
-                            onClick={() => setShowDateRangePicker(!showDateRangePicker)}
+                            value={`${dateRange.startDate.toLocaleDateString('en-GB')} - ${dateRange.endDate.toLocaleDateString('en-GB')}`}
+                            onClick={() => setShowDateRangePicker(true)}
                             onChange={handleManualDateInput}
                             onBlur={handleManualDateInput}
-                            placeholder="MM/DD/YYYY - MM/DD/YYYY"
+                            placeholder="DD/MM/YYYY - DD/MM/YYYY"
                           />
                           <span
                             className="position-absolute calendar-icon"
-                            style={{ right: '10px', cursor: 'pointer' }}
-                            onClick={(e) => {
-                              e.stopPropagation(); // Prevent event from propagating to input
-                              setShowDateRangePicker(prev => !prev);
+                            style={{ 
+                              right: '10px', 
+                              cursor: 'pointer',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              zIndex: 10
                             }}
+                            onClick={() => setShowDateRangePicker(true)}
                           >
                             📅
                           </span>
-                        </div>
-                        {showDateRangePicker && (
-                          <div 
-                            className="position-absolute date-range-dropdown" 
-                            style={{ 
-                              zIndex: 1000,
-                              top: '100%', // Position below the input
-                              left: 0,
-                              width: '100%'
-                            }}
-                            onClick={(e) => e.stopPropagation()} // Prevent clicking inside dropdown from closing it
-                          >
-                            <DateRangePicker
-                              ranges={[dateRange]}
-                              onChange={(selection) => {
-                                handleDateRangeChange(selection);
+                          {showDateRangePicker && (
+                            <div 
+                              className="date-range-dropdown position-fixed" 
+                              style={{ 
+                                backgroundColor: 'white',
+                                boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '8px',
+                                // padding: '5px', 
+                                width: '800px', 
+                                maxWidth: '90vw',
+                                overflowX: 'auto',
+                                maxHeight: '450px' // Further reduced height
                               }}
-                              moveRangeOnFirstSelection={false}
-                              showSelectionPreview={true}
-                              editableDateInputs={true}
-                              className="date-range-picker"
-                            />
-                          </div>
-                        )}
+                            >
+                              <DateRangePicker
+                                ranges={[dateRange]}
+                                onChange={(selection) => {
+                                  handleDateRangeChange(selection);
+                                }}
+                                moveRangeOnFirstSelection={false}
+                                showSelectionPreview={true}
+                                editableDateInputs={true}
+                                className="date-range-picker w-100"
+                                months={2} // Show 2 months
+                                direction="horizontal" // Horizontal layout
+                                showMonthArrow={true}
+                                showMonthAndYearPickers={true}
+                                // Custom styles to reduce height and improve visibility
+                                styles={{
+                                  wrapper: {
+                                    height: 'auto', // Let it adjust automatically
+                                    maxHeight: '330px'
+                                  },
+                                  calendar: {
+                                    height: 'auto'
+                                  },
+                                  monthAndYearWrapper: {
+                                    height: '35px' // Even more compact header
+                                  },
+                                  dayNumber: {
+                                    fontSize: '0.75rem' // Slightly smaller font
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
                         {validationErrors.dateRange && (
                           <div className="text-danger">Please select a valid date range.</div>
                         )}

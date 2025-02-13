@@ -571,6 +571,26 @@ h4 a:focus .anchor-icon {
   }
 }
 
+// Custom Select dropdown styles
+.custom-client-select {
+  position: relative;
+  z-index: 1000;
+
+  // Ensure dropdown menu is on top of other elements
+  .select__menu {
+    position: fixed !important;
+    z-index: 9999 !important;
+    max-height: 250px;
+    overflow-y: auto;
+  }
+
+  // Scrollable menu list
+  .select__menu-list {
+    max-height: 250px;
+    overflow-y: auto;
+  }
+}
+
 // DatePicker Custom Styles
 .custom-popper {
   z-index: 9999;
@@ -586,4 +606,54 @@ h4 a:focus .anchor-icon {
 
 .react-datepicker__input-container input {
   width: 100%;
+}
+
+.date-range-container {
+  position: relative;
+
+  .date-range-dropdown {
+    position: fixed !important;
+    z-index: 9999 !important;
+    background-color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    width: 1000px;
+    max-width: 90vw;
+    overflow-x: auto;
+    overflow-y: auto;
+
+    .rdrCalendarWrapper {
+      width: 100% !important;
+      max-width: 1000px !important;
+    }
+
+    .rdrDateRangeWrapper {
+      width: 100% !important;
+      max-width: 1000px !important;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .rdrMonths {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+    }
+
+    .rdrMonth {
+      width: 48%; 
+    }
+
+    .rdrDefinedRangesWrapper {
+      display: none; 
+    }
+  }
+
+  .rdrDateRangeWrapper,
+  .rdrCalendarWrapper {
+    width: 100% !important;
+    max-width: 1000px !important;
+  }
 }
